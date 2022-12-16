@@ -1,11 +1,8 @@
-use axum::body::{boxed, Body};
-use axum::http::{Response, StatusCode};
 use axum::{response::IntoResponse, routing::get, Router};
 use clap::Parser;
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
-use tower::{ServiceBuilder, ServiceExt};
-use tower_http::services::ServeDir;
+use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 
 // Setup the command line interface with clap.
