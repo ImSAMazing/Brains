@@ -41,7 +41,7 @@ fn hello_server() -> Html {
         }
         Some(Ok(data)) => {
             html! {
-                <div>{"Got server response: "}{data}</div>
+                <div>{"Got server response: "}{data}<br/><a href="/">{"Back"}</a></div>
             }
         }
         Some(Err(err)) => {
@@ -62,7 +62,9 @@ enum Route {
 
 fn switch(routes: Route) -> Html {
     match routes {
-        Route::Home => html! { <h1>{ "Hello Frontend" }</h1> },
+        Route::Home => {
+            html! { <div><h1>{ "Hello Frontend" }</h1> <a href="/hello-server">{"Link"}</a></div> }
+        }
         Route::HelloServer => html! {<HelloServer />},
     }
 }
