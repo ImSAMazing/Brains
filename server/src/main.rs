@@ -2,11 +2,18 @@ use axum::{response::IntoResponse, routing::get, Router};
 use clap::Parser;
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
+use tower::{ServiceBuilder, Service};
+use tower_http::trace::TraceLayer;
 
 // Setup the command line interface with clap.
 #[derive(Parser, Debug)]
 #[clap(name = "server", about = "A server for our wasm project!")]
 struct Opt {
+
+    ///set the log level
+    #[clap(short='l', long="log", default_value="debug")]
+    log_level: String,
+
     /// set the listen addr
     #[clap(short = 'a', long = "addr", default_value = "::1")]
     addr: String,
@@ -20,14 +27,21 @@ struct Opt {
 async fn main() {
     let opt = Opt::parse();
 
-    let app = Router::new().route("/", get(hello));
+    //Setup logging & RUST_LOG from args
+    if std::env::var("RUST_LOG").is_err(){
+        std::env::set_var("RUST_LOG", format!("{},hyper=info,mio=info", opt.log_level));
+    }
+    //enable console logging
+    tracing_subscriber::fmt::init();
+
+    let app = Router::new().route("/", get(hello)).layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()));
 
     let sock_addr = SocketAddr::from((
         IpAddr::from_str(opt.addr.as_str()).unwrap_or(IpAddr::V6(Ipv6Addr::LOCALHOST)),
         opt.port,
     ));
 
-    println!("listening on http://{}", sock_addr);
+    log::info!("listening on http://{}", sock_addr);
 
     axum::Server::bind(&sock_addr)
         .serve(app.into_make_service())
