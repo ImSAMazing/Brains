@@ -1,10 +1,29 @@
-use axum::{response::IntoResponse, routing::get, Router};
+use axum::{
+    extract::{rejection::JsonRejection, State},
+    http::{response, StatusCode},
+    response::IntoResponse,
+    routing::{get, post},
+    Json, Router,
+};
 use clap::Parser;
-use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
+use std::{
+    error::Error,
+    net::{IpAddr, Ipv6Addr, SocketAddr},
+};
+
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 
+use rand::{thread_rng, Rng};
+use serde::Deserialize;
+use serde::Serialize;
+use shared::Brainfart;
+use shared::CreateBrainfart;
+
+use sqlx::{postgres::PgPoolOptions, Pool};
+
+mod error_responders;
 // Setup the command line interface with clap.
 #[derive(Parser, Debug)]
 #[clap(name = "server", about = "A server for our wasm project!")]
@@ -25,6 +44,8 @@ struct Opt {
     static_dir: String,
 }
 
+type ConnectionPool = Pool<Postgres>;
+
 #[tokio::main]
 async fn main() {
     let opt = Opt::parse();
@@ -36,12 +57,22 @@ async fn main() {
     //enable console logging
     tracing_subscriber::fmt::init();
 
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect("postgres://webspelletjes:webspelletjes@localhost/webspelletjes")
+        .await
+        .expect("Setting up database pool failed");
+    // Make a simple query to return the given parameter (use a question mark `?` instead of `$1` for MySQL)
+
     let app = Router::new()
         .route("/api/hello", get(hello))
+        .route("/api/createbrainfart", post(create_brain_fart))
         .merge(axum_extra::routing::SpaRouter::new(
             "/assets",
             opt.static_dir,
         ))
+        .fallback(handle_404)
+        .with_state(pool)
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()));
 
     let sock_addr = SocketAddr::from((
@@ -57,6 +88,22 @@ async fn main() {
         .expect("Unable to start server");
 }
 
+async fn handle_404() -> impl IntoResponse {
+    (StatusCode::NOT_FOUND, "Nothing to see here")
+}
 async fn hello() -> impl IntoResponse {
     "hello from server!"
+}
+
+async fn create_brain_fart(
+    result: Result<Json<CreateBrainfart>, JsonRejection>,
+    State(pool): State<ConnectionPool>,
+) -> impl IntoResponse {
+    match result {
+        Ok(Json(payload)) => {
+            let brainfart = Brainfart::create_from_request(thread_rng().gen(), payload);
+            Ok((StatusCode::CREATED, Json(brainfart)))
+        }
+        Err(err) => Err(error_responders::post_error_responder(err)),
+    }
 }
