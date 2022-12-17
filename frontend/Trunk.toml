@@ -4,3 +4,12 @@ dist = "../dist"
 public_url ="/assets/"
 [[proxy]]
 backend = "http://[::1]:8081/api/"
+[serve]
+open = true
+[[hooks]]
+# This hook example shows all the current available fields. It will execute the equivalent of
+# typing "echo Hello Trunk!" right at the start of the build process (even before the HTML file
+# is read). By default, the command is spawned directly and no shell is used.
+stage = "pre_build"
+command = "sh"
+command_arguments = ["-c", "npx tailwindcss -o ./tailwind.css"]

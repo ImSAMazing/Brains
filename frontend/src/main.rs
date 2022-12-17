@@ -1,5 +1,6 @@
 use gloo_net::http::Request;
 use wasm_bindgen_futures::spawn_local;
+use yew::classes;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -63,7 +64,7 @@ enum Route {
 fn switch(routes: Route) -> Html {
     match routes {
         Route::Home => {
-            html! { <div><h1>{ "Hello Frontend" }</h1> <a href="/hello-server">{"Link"}</a></div> }
+            html! { <div><h1 class={classes!("text-center","text-red-400", "text-lg")}>{ "Hello Frontend" }</h1> <a class={classes!("text-red-100")} href="/hello-server">{"Link"}</a></div> }
         }
         Route::HelloServer => html! {<HelloServer />},
     }
