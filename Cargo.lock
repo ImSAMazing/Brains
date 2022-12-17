@@ -310,6 +310,7 @@ dependencies = [
  "console_error_panic_hook",
  "gloo-net",
  "log",
+ "shared",
  "wasm-bindgen-futures",
  "wasm-logger",
  "yew",
@@ -1130,6 +1131,7 @@ dependencies = [
  "axum-extra",
  "clap",
  "log",
+ "shared",
  "tokio",
  "tower",
  "tower-http",
@@ -1145,6 +1147,10 @@ checksum = "900fba806f70c630b0a382d0d825e17a0f19fcd059a2ade1ff237bcddf446b31"
 dependencies = [
  "lazy_static",
 ]
+
+[[package]]
+name = "shared"
+version = "0.1.0"
 
 [[package]]
 name = "signal-hook-registry"
