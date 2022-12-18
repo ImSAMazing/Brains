@@ -18,12 +18,13 @@ impl Fantasiforster {
         id: Uuid,
         förfrågan: ProduceraFantasiforsterFörfrågan,
         uppfinnare_id: Uuid,
+        födelsedag: DateTime<Local>,
     ) -> Fantasiforster {
         Fantasiforster {
             id,
             titel: förfrågan.titel,
             innehåll: förfrågan.innehåll,
-            födelsedag: Local::now(),
+            födelsedag,
             uppfinnare_id,
         }
     }
@@ -47,6 +48,7 @@ impl ProduceraFantasiforsterFörfrågan {
 pub struct Hjärna {
     id: Uuid,
     hjärnannamn: String,
+    födelsedag: DateTime<Local>,
 }
 
 impl Hjärna {
@@ -58,10 +60,15 @@ impl Hjärna {
         &self.id
     }
 
-    pub fn registrera(id: Uuid, förfrågan: RegistreraHjärnaFörfrågan) -> Hjärna {
+    pub fn registrera(
+        id: Uuid,
+        förfrågan: RegistreraHjärnaFörfrågan,
+        födelsedag: DateTime<Local>,
+    ) -> Hjärna {
         Hjärna {
             id,
             hjärnannamn: förfrågan.hjärnannamn,
+            födelsedag,
         }
     }
 }

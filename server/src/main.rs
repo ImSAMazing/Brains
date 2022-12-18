@@ -107,11 +107,16 @@ async fn producera_fantasiforster(
     State(pool): State<ConnectionPool>,
     result: Result<Json<ProduceraFantasiforsterFörfrågan>, JsonRejection>,
 ) -> impl IntoResponse {
-    let uppfinnare_id = Uuid::parse_str("29d687cb-017c-4d52-bff3-1c8dee61fe1e").unwrap();
+    let uppfinnare_id = Uuid::parse_str("5f4664af-31e7-4d71-a3ad-f9a990b22212").unwrap();
     match result {
         Ok(Json(payload)) => match payload.producera(pool, uppfinnare_id).await {
-            Some(id) => {
-                let brainfart = Fantasiforster::producera(id, payload, uppfinnare_id);
+            Some(reaktion) => {
+                let brainfart = Fantasiforster::producera(
+                    reaktion.uuid,
+                    payload,
+                    uppfinnare_id,
+                    reaktion.födelsedag,
+                );
                 Ok((StatusCode::CREATED, Json(brainfart)))
             }
             None => Err((
@@ -129,8 +134,8 @@ async fn registrera_hjärna(
 ) -> impl IntoResponse {
     match result {
         Ok(Json(payload)) => match payload.producera(pool, Uuid::nil()).await {
-            Some(id) => {
-                let hjärna = Hjärna::registrera(id, payload);
+            Some(reaktion) => {
+                let hjärna = Hjärna::registrera(reaktion.uuid, payload, reaktion.födelsedag);
                 Ok((StatusCode::CREATED, Json(hjärna)))
             }
             None => Err((
