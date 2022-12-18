@@ -6,6 +6,10 @@ use axum::{
     Json, Router,
 };
 use clap::Parser;
+use create_models::ProduceraFrånFörfrågan;
+use shared::{
+    Fantasiforster, Hjärna, ProduceraFantasiforsterFörfrågan, RegistreraHjärnaFörfrågan
+};
 use std::str::FromStr;
 use std::{
     error::Error,
@@ -18,13 +22,12 @@ use tower_http::trace::TraceLayer;
 use rand::{thread_rng, Rng};
 use serde::Deserialize;
 use serde::Serialize;
-use shared::Brainfart;
-use shared::CreateBrainfart;
 
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{postgres::PgPoolOptions, types::Uuid, Pool, Postgres};
 
 use dotenv::dotenv;
 
+mod create_models;
 mod error_responders;
 
 type ConnectionPool = Pool<Postgres>;
@@ -70,7 +73,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/api/hello", get(hello))
-        .route("/api/createbrainfart", post(create_brain_fart))
+        .route("/api/createbrainfart", post(producera_fantasiforster))
+        .route("/api/registerbrain", post(registrera_hjärna))
         .merge(axum_extra::routing::SpaRouter::new(
             "/assets",
             opt.static_dir,
@@ -99,40 +103,41 @@ async fn hello() -> impl IntoResponse {
     "hello from server!"
 }
 
-async fn create_brain_fart(
+async fn producera_fantasiforster(
     State(pool): State<ConnectionPool>,
-    result: Result<Json<CreateBrainfart>, JsonRejection>,
+    result: Result<Json<ProduceraFantasiforsterFörfrågan>, JsonRejection>,
+) -> impl IntoResponse {
+    let uppfinnare_id = Uuid::parse_str("29d687cb-017c-4d52-bff3-1c8dee61fe1e").unwrap();
+    match result {
+        Ok(Json(payload)) => match payload.producera(pool, uppfinnare_id).await {
+            Some(id) => {
+                let brainfart = Fantasiforster::producera(id, payload, uppfinnare_id);
+                Ok((StatusCode::CREATED, Json(brainfart)))
+            }
+            None => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Something went wrong creating the brainfart!".to_string(),
+            )),
+        },
+        Err(err) => Err(error_responders::post_error_responder(err)),
+    }
+}
+
+async fn registrera_hjärna(
+    State(pool): State<ConnectionPool>,
+    result: Result<Json<RegistreraHjärnaFörfrågan>, JsonRejection>,
 ) -> impl IntoResponse {
     match result {
-        Ok(Json(payload)) => {
-            let request = payload;
-            let create_query = sqlx::query!(
-                "INSERT INTO
-                 brainfarts
-                 (title,text,date,author)
-                  VALUES(
-                    $1,
-                    $2,
-                    NOW(),
-                    $3)
-                    RETURNING id",
-                request.get_title(),
-                request.get_text(),
-                request.get_author_name()
-            )
-            .fetch_all(&pool)
-            .await;
-            match create_query {
-                Ok(result) => {
-                    let brainfart = Brainfart::create_from_request(result[0].id, request);
-                    Ok((StatusCode::CREATED, Json(brainfart)))
-                }
-                Err(_) => Err((
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Something went wrong creating the brainfart!".to_string(),
-                )),
+        Ok(Json(payload)) => match payload.producera(pool, Uuid::nil()).await {
+            Some(id) => {
+                let hjärna = Hjärna::registrera(id, payload);
+                Ok((StatusCode::CREATED, Json(hjärna)))
             }
-        }
+            None => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Something went wrong creating the brainfart!".to_string(),
+            )),
+        },
         Err(err) => Err(error_responders::post_error_responder(err)),
     }
 }

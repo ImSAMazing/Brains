@@ -9,5 +9,5 @@ edition = "2021"
 chrono = {version = "0.4.23", features = ["serde"]}
 serde = { version = "1.0.151", features = ["derive"] }
 serde_json = "1.0.90"
-sqlx = { version = "0.6", features = ["uuid", "json"]}
+sqlx = { version = "0.6", features = ["runtime-tokio-native-tls","uuid", "json"]}
 uuid = {version = "1.2.2", features= ["serde"]}
