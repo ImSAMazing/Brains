@@ -16,11 +16,6 @@ use std::str::FromStr;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 
-use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2,
-};
-
 use sqlx::{postgres::PgPoolOptions, types::Uuid, Pool, Postgres};
 
 use dotenv::dotenv;

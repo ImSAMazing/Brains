@@ -76,10 +76,14 @@ impl Hjärna {
 #[derive(Deserialize, Serialize)]
 pub struct RegistreraHjärnaFörfrågan {
     hjärnannamn: String,
+    lösenord: String,
 }
 
 impl RegistreraHjärnaFörfrågan {
     pub fn skaffa_mig_ditt_namn(&self) -> &str {
         &self.hjärnannamn
+    }
+    pub fn skaffa_mig_ditt_lösenord(&self) -> &str {
+        &self.lösenord
     }
 }
