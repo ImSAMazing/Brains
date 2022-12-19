@@ -1,6 +1,6 @@
 use axum::{
     extract::{rejection::JsonRejection, State},
-    http::{response, StatusCode},
+    http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
     Json, Router,
@@ -10,18 +10,16 @@ use create_models::ProduceraFrånFörfrågan;
 use shared::{
     Fantasiforster, Hjärna, ProduceraFantasiforsterFörfrågan, RegistreraHjärnaFörfrågan
 };
+use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
-use std::{
-    error::Error,
-    net::{IpAddr, Ipv6Addr, SocketAddr},
-};
 
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 
-use rand::{thread_rng, Rng};
-use serde::Deserialize;
-use serde::Serialize;
+use argon2::{
+    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
 
 use sqlx::{postgres::PgPoolOptions, types::Uuid, Pool, Postgres};
 
@@ -111,18 +109,15 @@ async fn producera_fantasiforster(
     match result {
         Ok(Json(payload)) => match payload.producera(pool, uppfinnare_id).await {
             Some(reaktion) => {
-                let brainfart = Fantasiforster::producera(
+                let forster = Fantasiforster::producera(
                     reaktion.uuid,
                     payload,
                     uppfinnare_id,
                     reaktion.födelsedag,
                 );
-                Ok((StatusCode::CREATED, Json(brainfart)))
+                Ok((StatusCode::CREATED, Json(forster)))
             }
-            None => Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Something went wrong creating the brainfart!".to_string(),
-            )),
+            None => Err((StatusCode::INTERNAL_SERVER_ERROR, "Producera ".to_string())),
         },
         Err(err) => Err(error_responders::post_error_responder(err)),
     }
