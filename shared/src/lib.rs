@@ -49,6 +49,7 @@ pub struct Hjärna {
     id: Uuid,
     hjärnannamn: String,
     födelsedag: DateTime<Local>,
+    krypterade_lösenordet: String,
 }
 
 impl Hjärna {
@@ -60,15 +61,21 @@ impl Hjärna {
         &self.id
     }
 
+    pub fn skaffa_mig_ditt_krypterade_lösenordet(&self) -> &str {
+        &self.krypterade_lösenordet
+    }
+
     pub fn registrera(
         id: Uuid,
         förfrågan: RegistreraHjärnaFörfrågan,
         födelsedag: DateTime<Local>,
+        krypterade_lösenordet: String,
     ) -> Hjärna {
         Hjärna {
             id,
             hjärnannamn: förfrågan.hjärnannamn,
             födelsedag,
+            krypterade_lösenordet,
         }
     }
 }
@@ -80,6 +87,20 @@ pub struct RegistreraHjärnaFörfrågan {
 }
 
 impl RegistreraHjärnaFörfrågan {
+    pub fn skaffa_mig_ditt_namn(&self) -> &str {
+        &self.hjärnannamn
+    }
+    pub fn skaffa_mig_ditt_lösenord(&self) -> &str {
+        &self.lösenord
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct DemonstreraBesittarHjärnaFörfrågon {
+    hjärnannamn: String,
+    lösenord: String,
+}
+impl DemonstreraBesittarHjärnaFörfrågon {
     pub fn skaffa_mig_ditt_namn(&self) -> &str {
         &self.hjärnannamn
     }

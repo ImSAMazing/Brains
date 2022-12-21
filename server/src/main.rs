@@ -6,9 +6,10 @@ use axum::{
     Json, Router,
 };
 use clap::Parser;
-use create_models::ProduceraFrånFörfrågan;
+use databank::{create_models::ProduceraFrånFörfrågan, losenord_verifiera::verifiera_lösenord};
 use shared::{
-    Fantasiforster, Hjärna, ProduceraFantasiforsterFörfrågan, RegistreraHjärnaFörfrågan
+    DemonstreraBesittarHjärnaFörfrågon, Fantasiforster, Hjärna, ProduceraFantasiforsterFörfrågan,
+    RegistreraHjärnaFörfrågan,
 };
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
@@ -20,7 +21,7 @@ use sqlx::{postgres::PgPoolOptions, types::Uuid, Pool, Postgres};
 
 use dotenv::dotenv;
 
-mod create_models;
+mod databank;
 mod error_responders;
 
 type ConnectionPool = Pool<Postgres>;
@@ -68,6 +69,7 @@ async fn main() {
         .route("/api/hello", get(hello))
         .route("/api/createbrainfart", post(producera_fantasiforster))
         .route("/api/registerbrain", post(registrera_hjärna))
+        .route("/api/loginasbrain", post(demonstrera_jag_besittar_hjärnan))
         .merge(axum_extra::routing::SpaRouter::new(
             "/assets",
             opt.static_dir,
@@ -125,7 +127,12 @@ async fn registrera_hjärna(
     match result {
         Ok(Json(payload)) => match payload.producera(pool, Uuid::nil()).await {
             Some(reaktion) => {
-                let hjärna = Hjärna::registrera(reaktion.uuid, payload, reaktion.födelsedag);
+                let hjärna = Hjärna::registrera(
+                    reaktion.uuid,
+                    payload,
+                    reaktion.födelsedag,
+                    reaktion.tillägen_information.unwrap(),
+                );
                 Ok((StatusCode::CREATED, Json(hjärna)))
             }
             None => Err((
@@ -133,6 +140,27 @@ async fn registrera_hjärna(
                 "Something went wrong creating the brainfart!".to_string(),
             )),
         },
+        Err(err) => Err(error_responders::post_error_responder(err)),
+    }
+}
+
+async fn demonstrera_jag_besittar_hjärnan(
+    State(pool): State<ConnectionPool>,
+    result: Result<Json<DemonstreraBesittarHjärnaFörfrågon>, JsonRejection>,
+) -> impl IntoResponse {
+    match result {
+        Ok(Json(result)) => {
+            if let Some(success_status) = verifiera_lösenord(pool, result).await {
+                let token = "";
+                if success_status {
+                    Ok((StatusCode::ACCEPTED, Json(token)))
+                } else {
+                    Ok((StatusCode::UNAUTHORIZED, Json("Invalid password!")))
+                }
+            } else {
+                Ok((StatusCode::UNAUTHORIZED, Json("Unknown brain!")))
+            }
+        }
         Err(err) => Err(error_responders::post_error_responder(err)),
     }
 }

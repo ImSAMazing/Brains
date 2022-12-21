@@ -10,6 +10,7 @@ use sqlx::{types::Uuid, Pool, Postgres};
 pub struct ProduceraReaktion {
     pub uuid: Uuid,
     pub födelsedag: DateTime<Local>,
+    pub tillägen_information: Option<String>,
 }
 #[async_trait]
 pub trait ProduceraFrånFörfrågan {
@@ -44,6 +45,7 @@ impl ProduceraFrånFörfrågan for ProduceraFantasiforsterFörfrågan {
             Ok(result) => Some(ProduceraReaktion {
                 uuid: result.id,
                 födelsedag: result.födelsedag.unwrap().into(),
+                tillägen_information: None,
             }),
             Err(_) => None,
         }
@@ -59,28 +61,32 @@ impl ProduceraFrånFörfrågan for RegistreraHjärnaFörfrågan {
     ) -> Option<ProduceraReaktion> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
-        let Ok(password_hash) =
-            argon2.hash_password(&self.skaffa_mig_ditt_lösenord().as_bytes(), &salt) else{
-
-            }
-
-        let create_query = sqlx::query!(
-            "INSERT INTO
+        if let Ok(password_hash) =
+            argon2.hash_password(&self.skaffa_mig_ditt_lösenord().as_bytes(), &salt)
+        {
+            let create_query = sqlx::query!(
+                "INSERT INTO
                 hjärnor
-                (hjärnannamn)
+                (hjärnannamn, lösenord)
                 VALUES(
-                $1)
+                $1,
+                $2)
                 RETURNING id, födelsedag",
-            &self.skaffa_mig_ditt_namn()
-        )
-        .fetch_one(&pool)
-        .await;
-        match create_query {
-            Ok(result) => Some(ProduceraReaktion {
-                uuid: result.id,
-                födelsedag: result.födelsedag.unwrap().into(),
-            }),
-            Err(_) => None,
+                &self.skaffa_mig_ditt_namn(),
+                password_hash.to_string()
+            )
+            .fetch_one(&pool)
+            .await;
+            match create_query {
+                Ok(result) => Some(ProduceraReaktion {
+                    uuid: result.id,
+                    födelsedag: result.födelsedag.unwrap().into(),
+                    tillägen_information: Some(password_hash.to_string()),
+                }),
+                Err(_) => None,
+            }
+        } else {
+            None
         }
     }
 }
