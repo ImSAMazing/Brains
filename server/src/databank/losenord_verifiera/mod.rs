@@ -7,7 +7,7 @@ use sqlx::{Pool, Postgres};
 
 pub async fn verifiera_lösenord(
     pool: Pool<Postgres>,
-    förfrågon: DemonstreraBesittarHjärnaFörfrågon,
+    förfrågon: &DemonstreraBesittarHjärnaFörfrågon,
 ) -> Option<bool> {
     let hjärna_query = sqlx::query!(
         "select lösenord from hjärnor where hjärnannamn=$1 LIMIT 1",

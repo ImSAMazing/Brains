@@ -25,3 +25,4 @@ async-trait = "0.1.60"
 chrono = "0.4.23"
 argon2 = "0.4.1"
 rand_core = { version = "0.6.4", features = ["std"] }
+jsonwebtoken = "8"

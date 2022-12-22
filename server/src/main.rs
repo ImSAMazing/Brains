@@ -1,3 +1,4 @@
+use autentisering::producera_jwt;
 use axum::{
     extract::{rejection::JsonRejection, State},
     http::StatusCode,
@@ -21,6 +22,7 @@ use sqlx::{postgres::PgPoolOptions, types::Uuid, Pool, Postgres};
 
 use dotenv::dotenv;
 
+mod autentisering;
 mod databank;
 mod error_responders;
 
@@ -150,15 +152,18 @@ async fn demonstrera_jag_besittar_hjärnan(
 ) -> impl IntoResponse {
     match result {
         Ok(Json(result)) => {
-            if let Some(success_status) = verifiera_lösenord(pool, result).await {
-                let token = "";
+            if let Some(success_status) = verifiera_lösenord(pool, &result).await {
+                let token = producera_jwt((&result.skaffa_mig_ditt_namn()).to_string());
                 if success_status {
                     Ok((StatusCode::ACCEPTED, Json(token)))
                 } else {
-                    Ok((StatusCode::UNAUTHORIZED, Json("Invalid password!")))
+                    Ok((
+                        StatusCode::UNAUTHORIZED,
+                        Json("Invalid password!".to_string()),
+                    ))
                 }
             } else {
-                Ok((StatusCode::UNAUTHORIZED, Json("Unknown brain!")))
+                Ok((StatusCode::UNAUTHORIZED, Json("Unknown brain!".to_string())))
             }
         }
         Err(err) => Err(error_responders::post_error_responder(err)),
