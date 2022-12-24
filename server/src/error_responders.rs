@@ -1,11 +1,9 @@
-use std::error::Error;
-
 use axum::{extract::rejection::JsonRejection, http::StatusCode};
 
 pub fn post_error_responder(err: JsonRejection) -> (StatusCode, String) {
     let response_text = match err {
-        JsonRejection::JsonDataError(err) => "Invalid data",
-        JsonRejection::JsonSyntaxError(err) => "Invalid json syntax",
+        JsonRejection::JsonDataError(_err) => "Invalid data",
+        JsonRejection::JsonSyntaxError(_err) => "Invalid json syntax",
         // handle other rejections from the `Json` extractor
         JsonRejection::MissingJsonContentType(_) => {
             "Missing `Content-Type: application/json` header"

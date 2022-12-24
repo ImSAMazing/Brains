@@ -1,8 +1,8 @@
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
 };
-use async_trait::async_trait;
+use axum::async_trait;
 use chrono::{DateTime, Local};
 use shared::{ProduceraFantasiforsterFörfrågan, RegistreraHjärnaFörfrågan};
 use sqlx::{types::Uuid, Pool, Postgres};

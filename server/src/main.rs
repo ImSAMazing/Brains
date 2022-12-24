@@ -1,4 +1,4 @@
-use autentisering::producera_jwt;
+use autentisering::{producera_jwt, JwtInformation};
 use axum::{
     extract::{rejection::JsonRejection, State},
     http::StatusCode,
@@ -102,9 +102,10 @@ async fn hello() -> impl IntoResponse {
 
 async fn producera_fantasiforster(
     State(pool): State<ConnectionPool>,
+    jwt_information: JwtInformation,
     result: Result<Json<ProduceraFantasiforsterFörfrågan>, JsonRejection>,
 ) -> impl IntoResponse {
-    let uppfinnare_id = Uuid::parse_str("5f4664af-31e7-4d71-a3ad-f9a990b22212").unwrap();
+    let uppfinnare_id = jwt_information.id;
     match result {
         Ok(Json(payload)) => match payload.producera(pool, uppfinnare_id).await {
             Some(reaktion) => {
@@ -152,16 +153,9 @@ async fn demonstrera_jag_besittar_hjärnan(
 ) -> impl IntoResponse {
     match result {
         Ok(Json(result)) => {
-            if let Some(success_status) = verifiera_lösenord(pool, &result).await {
-                let token = producera_jwt((&result.skaffa_mig_ditt_namn()).to_string());
-                if success_status {
-                    Ok((StatusCode::ACCEPTED, Json(token)))
-                } else {
-                    Ok((
-                        StatusCode::UNAUTHORIZED,
-                        Json("Invalid password!".to_string()),
-                    ))
-                }
+            if let Some(id) = verifiera_lösenord(pool, &result).await {
+                let token = producera_jwt(id, (&result.skaffa_mig_ditt_namn()).to_string());
+                Ok((StatusCode::ACCEPTED, Json(token)))
             } else {
                 Ok((StatusCode::UNAUTHORIZED, Json("Unknown brain!".to_string())))
             }
