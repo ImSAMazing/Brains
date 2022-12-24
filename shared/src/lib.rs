@@ -5,6 +5,29 @@ use serde::Serialize;
 use sqlx::types::Uuid;
 
 #[derive(Deserialize, Serialize)]
+pub struct FantasiforsterInformation {
+    pub id: Uuid,
+    pub titel: String,
+    pub innehåll: String,
+    pub födelsedag: DateTime<Local>,
+    pub uppfinnare_namn: String,
+}
+
+impl FantasiforsterInformation {
+    pub fn producera(
+        forster: Fantasiforster,
+        uppfinnare_namn: String,
+    ) -> FantasiforsterInformation {
+        FantasiforsterInformation {
+            id: forster.id,
+            titel: forster.titel,
+            innehåll: forster.innehåll,
+            födelsedag: forster.födelsedag,
+            uppfinnare_namn,
+        }
+    }
+}
+#[derive(Deserialize, Serialize)]
 pub struct Fantasiforster {
     pub id: Uuid,
     pub titel: String,
@@ -30,6 +53,14 @@ impl Fantasiforster {
     }
 }
 
+#[derive(Deserialize, Serialize)]
+pub struct FantasiforsterFilter {}
+
+impl FantasiforsterFilter {
+    pub fn default() -> FantasiforsterFilter {
+        FantasiforsterFilter {}
+    }
+}
 #[derive(Deserialize)]
 pub struct ProduceraFantasiforsterFörfrågan {
     titel: String,

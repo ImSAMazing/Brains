@@ -7,10 +7,14 @@ use axum::{
     Json, Router,
 };
 use clap::Parser;
-use databank::{create_models::ProduceraFrånFörfrågan, losenord_verifiera::verifiera_lösenord};
+use databank::{
+    create_models::{self, ProduceraFrånFörfrågan},
+    losenord_verifiera::verifiera_lösenord,
+    skaffa_models,
+};
 use shared::{
-    DemonstreraBesittarHjärnaFörfrågon, Fantasiforster, Hjärna, ProduceraFantasiforsterFörfrågan,
-    RegistreraHjärnaFörfrågan,
+    DemonstreraBesittarHjärnaFörfrågon, Fantasiforster, FantasiforsterFilter, Hjärna,
+    ProduceraFantasiforsterFörfrågan, RegistreraHjärnaFörfrågan,
 };
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
@@ -120,6 +124,25 @@ async fn producera_fantasiforster(
             None => Err((StatusCode::INTERNAL_SERVER_ERROR, "Producera ".to_string())),
         },
         Err(err) => Err(error_responders::post_error_responder(err)),
+    }
+}
+
+async fn skaffa_mig_era_fantasiforster(
+    State(pool): State<ConnectionPool>,
+    jwt_information: JwtInformation,
+    result: Result<Json<FantasiforsterFilter>, JsonRejection>,
+) -> impl IntoResponse {
+    let filter = if let Ok(Json(payload)) = result {
+        payload
+    } else {
+        FantasiforsterFilter::default()
+    };
+    if let Some(fantasiforster) =
+        skaffa_models::skaffa_mig_fantasiforster_från_filter(pool, filter).await
+    {
+        Ok((StatusCode::OK, Json(fantasiforster)))
+    } else {
+        Err((StatusCode::NOT_FOUND, "Error".to_string()))
     }
 }
 
