@@ -80,7 +80,6 @@ async fn main() {
             "/assets",
             opt.static_dir,
         ))
-        .fallback(handle_404)
         .with_state(pool)
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()));
 
@@ -114,9 +113,9 @@ async fn producera_fantasiforster(
         Ok(Json(payload)) => match payload.producera(pool, uppfinnare_id).await {
             Some(reaktion) => {
                 let forster = Fantasiforster::producera(
-                    reaktion.uuid,
+                    reaktion.uuid.to_string(),
                     payload,
-                    uppfinnare_id,
+                    uppfinnare_id.to_string(),
                     reaktion.födelsedag,
                 );
                 Ok((StatusCode::CREATED, Json(forster)))
@@ -154,7 +153,7 @@ async fn registrera_hjärna(
         Ok(Json(payload)) => match payload.producera(pool, Uuid::nil()).await {
             Some(reaktion) => {
                 let hjärna = Hjärna::registrera(
-                    reaktion.uuid,
+                    reaktion.uuid.to_string(),
                     payload,
                     reaktion.födelsedag,
                     reaktion.tillägen_information.unwrap(),
@@ -162,7 +161,7 @@ async fn registrera_hjärna(
                 Ok((
                     StatusCode::CREATED,
                     Json(producera_jwt(
-                        *hjärna.skaffa_mig_ditt_id(),
+                        Uuid::parse_str(hjärna.skaffa_mig_ditt_id()).unwrap(),
                         hjärna.skaffa_mig_ditt_namn().to_string(),
                     )),
                 ))

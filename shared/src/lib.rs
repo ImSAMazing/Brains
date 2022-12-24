@@ -2,7 +2,8 @@ use chrono::DateTime;
 use chrono::Local;
 use serde::Deserialize;
 use serde::Serialize;
-use sqlx::types::Uuid;
+
+type Uuid = String;
 
 #[derive(Deserialize, Serialize)]
 pub struct FantasiforsterInformation {
