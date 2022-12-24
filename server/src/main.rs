@@ -136,7 +136,13 @@ async fn registrera_hjärna(
                     reaktion.födelsedag,
                     reaktion.tillägen_information.unwrap(),
                 );
-                Ok((StatusCode::CREATED, Json(hjärna)))
+                Ok((
+                    StatusCode::CREATED,
+                    Json(producera_jwt(
+                        *hjärna.skaffa_mig_ditt_id(),
+                        hjärna.skaffa_mig_ditt_namn().to_string(),
+                    )),
+                ))
             }
             None => Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
