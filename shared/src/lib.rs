@@ -139,4 +139,14 @@ impl DemonstreraBesittarHjärnaFörfrågon {
     pub fn skaffa_mig_ditt_lösenord(&self) -> &str {
         &self.lösenord
     }
+
+    pub fn producera(
+        hjärnannamn: String,
+        lösenord: String,
+    ) -> DemonstreraBesittarHjärnaFörfrågon {
+        DemonstreraBesittarHjärnaFörfrågon {
+            hjärnannamn,
+            lösenord,
+        }
+    }
 }
