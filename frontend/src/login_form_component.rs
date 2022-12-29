@@ -1,13 +1,16 @@
-use email_address::EmailAddress;
+use std::error;
+
 use gloo_net::http::Request;
 use shared::DemonstreraBesittarHjärnaFörfrågon;
 use web_sys::HtmlButtonElement;
+use web_sys::HtmlDivElement;
+use web_sys::HtmlElement;
 use web_sys::HtmlInputElement;
+use web_sys::Node;
 use yew::classes;
 use yew::Classes;
 use yew::{html, Component, Html, InputEvent, MouseEvent, NodeRef, Properties, TargetCast};
 
-use crate::Login;
 use wasm_bindgen_futures::spawn_local;
 #[derive(Properties, PartialEq)]
 pub struct LoginFormProps {
@@ -15,15 +18,17 @@ pub struct LoginFormProps {
 }
 
 pub enum Message {
-    SetEmail(String),
+    SetNamn(String),
     SetPassword(String),
     Submit,
     DoNothing,
 }
 
 pub struct LoginFormComponent {
-    email_ref: NodeRef,
+    namn_ref: NodeRef,
     password_ref: NodeRef,
+    error_holder_ref: NodeRef,
+    error_text_ref: NodeRef,
     button_ref: NodeRef,
     button_classes: Classes,
 }
@@ -41,8 +46,8 @@ impl LoginFormComponent {
         )
     }
 
-    fn update_button_status(&mut self, email: &String, password: &String) -> bool {
-        if EmailAddress::is_valid(email) && !password.is_empty() {
+    fn update_button_status(&mut self, namn: &String, password: &String) -> bool {
+        if !namn.is_empty() && !password.is_empty() {
             self.set_button_enabled()
         } else {
             self.set_button_disabled()
@@ -82,8 +87,10 @@ impl Component for LoginFormComponent {
     type Properties = LoginFormProps;
     fn create(_ctx: &yew::Context<Self>) -> Self {
         Self {
-            email_ref: NodeRef::default(),
+            namn_ref: NodeRef::default(),
             password_ref: NodeRef::default(),
+            error_holder_ref: NodeRef::default(),
+            error_text_ref: NodeRef::default(),
             button_ref: NodeRef::default(),
             button_classes: LoginFormComponent::get_default_button_classes(),
         }
@@ -91,49 +98,52 @@ impl Component for LoginFormComponent {
 
     fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Message::SetEmail(val) => {
+            Message::SetNamn(val) => {
                 let password_element = self.password_ref.cast::<HtmlInputElement>().unwrap();
                 let password = password_element.value();
                 self.update_button_status(&val, &password)
             }
             Message::SetPassword(val) => {
-                let email_element = self.email_ref.cast::<HtmlInputElement>().unwrap();
-                let email = email_element.value();
-                self.update_button_status(&email, &val)
+                let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
+                let namn = namn_element.value();
+                self.update_button_status(&namn, &val)
             }
             Message::Submit => {
                 self.set_button_disabled();
-                let email_element = self.email_ref.cast::<HtmlInputElement>().unwrap();
+                let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
                 let password_element = self.password_ref.cast::<HtmlInputElement>().unwrap();
-                let email = email_element.value();
+
+                let error_holder_element = self.error_holder_ref.cast::<HtmlDivElement>().unwrap();
+                error_holder_element.set_hidden(true);
+
+                let error_text_element = self.error_text_ref.cast::<HtmlElement>().unwrap();
+
+                let namn = namn_element.value();
                 let password = password_element.value();
-                log::debug!("Submitting form: {email}, {password}");
+                log::debug!("Submitting form: {namn}, {password}");
                 spawn_local(async move {
                     let resp = Request::post("/api/loginasbrain")
-                        .body(DemonstreraBesittarHjärnaFörfrågon::producera(
-                            email, password,
+                        .json(&DemonstreraBesittarHjärnaFörfrågon::producera(
+                            namn, password,
                         ))
+                        .unwrap()
                         .send()
                         .await
                         .unwrap();
-                    let result = {
-                        if !resp.ok() {
-                            Err(format!(
-                                "Error fetching data {} ({})",
-                                resp.status(),
-                                resp.status_text()
-                            ))
-                        } else {
-                            resp.text().await.map_err(|err| err.to_string())
-                        }
-                    };
+
+                    if !resp.ok() {
+                        error_text_element
+                            .set_inner_text(&resp.text().await.unwrap().replace("\"", ""));
+                        error_holder_element.set_hidden(false);
+                    } else {
+                        log::debug!("{}", resp.text().await.unwrap());
+                    }
+
+                    password_element.set_value("");
                 });
 
-                email_element.set_value("");
-                password_element.set_value("");
-
                 self.set_button_enabled();
-                true
+                false
             }
             Message::DoNothing => false,
         }
@@ -142,9 +152,9 @@ impl Component for LoginFormComponent {
     fn view(&self, ctx: &yew::Context<Self>) -> Html {
         let explainer = &ctx.props().login_explainer;
 
-        let on_email_input = ctx.link().callback(move |e: InputEvent| {
+        let on_namn_input = ctx.link().callback(move |e: InputEvent| {
             let input_el: HtmlInputElement = e.target_unchecked_into();
-            Message::SetEmail(input_el.value())
+            Message::SetNamn(input_el.value())
         });
 
         let on_password_input = ctx.link().callback(move |e: InputEvent| {
@@ -153,12 +163,12 @@ impl Component for LoginFormComponent {
         });
 
         let on_click = {
-            let email_ref = self.email_ref.clone();
+            let namn_ref = self.namn_ref.clone();
             let password_ref = self.password_ref.clone();
             ctx.link().callback(move |e: MouseEvent| {
-                let email_element = email_ref.cast::<HtmlInputElement>().unwrap();
+                let namn_element = namn_ref.cast::<HtmlInputElement>().unwrap();
                 let password_element = password_ref.cast::<HtmlInputElement>().unwrap();
-                if email_element.value().is_empty() || password_element.value().is_empty() {
+                if namn_element.value().is_empty() || password_element.value().is_empty() {
                     log::debug!("Doing nothing");
                     Message::DoNothing //Dit triggert eigenlijk nooit behalve bij initiale creatie want button is disabled... weghalen misschien? Todo
                 } else {
@@ -170,11 +180,13 @@ impl Component for LoginFormComponent {
         <div class="flex items-center justify-center min-h-screen bg-gray-100">
             <div class="px-8 py-6 mt-4 text-left bg-white shadow-lg">
                 <h3 class="text-2xl font-bold text-center">{explainer}</h3>
-
+                <div ref={self.error_holder_ref.clone()} class="mt-2 bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4" role="alert">
+                    <p ref={self.error_text_ref.clone()}>{"Something not ideal might be happening."}</p>
+                </div>
                 <div class="mt-4">
                     <div>
-                        <label class="block" for="email">{"Email"}</label>
-                        <input ref={self.email_ref.clone()} type="text" placeholder={"Email"} oninput={on_email_input}
+                        <label class="block" for="namn">{"Namn"}</label>
+                        <input ref={self.namn_ref.clone()} id="namn" type="text" placeholder={"Namn"} oninput={on_namn_input}
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="mt-4">
