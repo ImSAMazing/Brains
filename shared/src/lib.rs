@@ -115,6 +115,7 @@ impl Hjärna {
 pub struct RegistreraHjärnaFörfrågan {
     hjärnannamn: String,
     lösenord: String,
+    lösenord_extra: String,
 }
 
 impl RegistreraHjärnaFörfrågan {
@@ -123,6 +124,26 @@ impl RegistreraHjärnaFörfrågan {
     }
     pub fn skaffa_mig_ditt_lösenord(&self) -> &str {
         &self.lösenord
+    }
+
+    pub fn skaffa_mig_ditt_lösenord_extra(&self) -> &str {
+        &self.lösenord_extra
+    }
+
+    pub fn producera(
+        hjärnannamn: String,
+        lösenord: String,
+        lösenord_extra: String,
+    ) -> RegistreraHjärnaFörfrågan {
+        RegistreraHjärnaFörfrågan {
+            hjärnannamn,
+            lösenord,
+            lösenord_extra,
+        }
+    }
+
+    pub fn validera(hjärnannamn: &str, lösenord: &str, lösenord_extra: &str) -> bool {
+        !hjärnannamn.is_empty() && !lösenord.is_empty() && lösenord == lösenord_extra
     }
 }
 

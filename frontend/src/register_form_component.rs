@@ -2,6 +2,7 @@ use std::error;
 
 use gloo_net::http::Request;
 use shared::DemonstreraBesittarHjärnaFörfrågon;
+use shared::RegistreraHjärnaFörfrågan;
 use web_sys::HtmlButtonElement;
 use web_sys::HtmlDivElement;
 use web_sys::HtmlElement;
@@ -13,27 +14,27 @@ use yew::{html, Component, Html, InputEvent, MouseEvent, NodeRef, Properties, Ta
 
 use wasm_bindgen_futures::spawn_local;
 #[derive(Properties, PartialEq)]
-pub struct LoginFormProps {
-    pub login_explainer: String,
+pub struct RegisterFormProps {
+    pub register_explainer: String,
 }
 
 pub enum Message {
-    SetNamn(String),
-    SetPassword(String),
+    SetField,
     Submit,
     DoNothing,
 }
 
-pub struct LoginFormComponent {
+pub struct RegisterFormComponent {
     namn_ref: NodeRef,
-    password_ref: NodeRef,
+    lösenord_ref: NodeRef,
+    lösenord_extra_ref: NodeRef,
     error_holder_ref: NodeRef,
     error_text_ref: NodeRef,
     button_ref: NodeRef,
     button_classes: Classes,
 }
 
-impl LoginFormComponent {
+impl RegisterFormComponent {
     fn get_default_button_classes() -> Classes {
         classes!(
             "px-6",
@@ -46,8 +47,13 @@ impl LoginFormComponent {
         )
     }
 
-    fn update_button_status(&mut self, namn: &String, password: &String) -> bool {
-        if !namn.is_empty() && !password.is_empty() {
+    fn update_button_status(
+        &mut self,
+        namn: &String,
+        lösenord: &String,
+        lösenord_extra: &String,
+    ) -> bool {
+        if RegistreraHjärnaFörfrågan::validera(namn, lösenord, lösenord_extra) {
             self.set_button_enabled()
         } else {
             self.set_button_disabled()
@@ -58,7 +64,7 @@ impl LoginFormComponent {
         let button_element = self.button_ref.cast::<HtmlButtonElement>().unwrap();
         if button_element.disabled() {
             button_element.set_disabled(false);
-            self.button_classes = LoginFormComponent::get_default_button_classes();
+            self.button_classes = RegisterFormComponent::get_default_button_classes();
             return true;
         }
         false
@@ -82,36 +88,40 @@ impl LoginFormComponent {
     }
 }
 
-impl Component for LoginFormComponent {
+impl Component for RegisterFormComponent {
     type Message = Message;
-    type Properties = LoginFormProps;
+    type Properties = RegisterFormProps;
     fn create(_ctx: &yew::Context<Self>) -> Self {
         Self {
             namn_ref: NodeRef::default(),
-            password_ref: NodeRef::default(),
+            lösenord_ref: NodeRef::default(),
+            lösenord_extra_ref: NodeRef::default(),
             error_holder_ref: NodeRef::default(),
             error_text_ref: NodeRef::default(),
             button_ref: NodeRef::default(),
-            button_classes: LoginFormComponent::get_default_button_classes(),
+            button_classes: RegisterFormComponent::get_default_button_classes(),
         }
     }
 
     fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Message::SetNamn(val) => {
-                let password_element = self.password_ref.cast::<HtmlInputElement>().unwrap();
-                let password = password_element.value();
-                self.update_button_status(&val, &password)
-            }
-            Message::SetPassword(val) => {
+            Message::SetField => {
                 let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
                 let namn = namn_element.value();
-                self.update_button_status(&namn, &val)
+                let lösenord_element = self.lösenord_ref.cast::<HtmlInputElement>().unwrap();
+                let lösenord = lösenord_element.value();
+                let lösenord_extra_element =
+                    self.lösenord_extra_ref.cast::<HtmlInputElement>().unwrap();
+                let lösenord_extra = lösenord_extra_element.value();
+
+                self.update_button_status(&namn, &lösenord, &lösenord_extra)
             }
             Message::Submit => {
                 self.set_button_disabled();
                 let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
-                let password_element = self.password_ref.cast::<HtmlInputElement>().unwrap();
+                let lösenord_element = self.lösenord_ref.cast::<HtmlInputElement>().unwrap();
+                let lösenord_extra_element =
+                    self.lösenord_extra_ref.cast::<HtmlInputElement>().unwrap();
 
                 let error_holder_element = self.error_holder_ref.cast::<HtmlDivElement>().unwrap();
                 error_holder_element.set_hidden(true);
@@ -119,12 +129,14 @@ impl Component for LoginFormComponent {
                 let error_text_element = self.error_text_ref.cast::<HtmlElement>().unwrap();
 
                 let namn = namn_element.value();
-                let password = password_element.value();
-                log::debug!("Submitting form: {namn}, {password}");
+                let lösenord = lösenord_element.value();
+                let lösenord_extra = lösenord_extra_element.value();
                 spawn_local(async move {
-                    let resp = Request::post("/api/loginasbrain")
-                        .json(&DemonstreraBesittarHjärnaFörfrågon::producera(
-                            namn, password,
+                    let resp = Request::post("/api/registerbrain")
+                        .json(&RegistreraHjärnaFörfrågan::producera(
+                            namn,
+                            lösenord,
+                            lösenord_extra,
                         ))
                         .unwrap()
                         .send()
@@ -137,9 +149,9 @@ impl Component for LoginFormComponent {
                         error_holder_element.set_hidden(false);
                     } else {
                         log::debug!("{}", resp.text().await.unwrap());
+                        lösenord_element.set_value("");
+                        lösenord_extra_element.set_value("");
                     }
-
-                    password_element.set_value("");
                 });
 
                 self.set_button_enabled();
@@ -150,32 +162,14 @@ impl Component for LoginFormComponent {
     }
 
     fn view(&self, ctx: &yew::Context<Self>) -> Html {
-        let explainer = &ctx.props().login_explainer;
+        let explainer = &ctx.props().register_explainer;
 
-        let on_namn_input = ctx.link().callback(move |e: InputEvent| {
+        let on_input = ctx.link().callback(move |e: InputEvent| {
             let input_el: HtmlInputElement = e.target_unchecked_into();
-            Message::SetNamn(input_el.value())
+            Message::SetField
         });
 
-        let on_password_input = ctx.link().callback(move |e: InputEvent| {
-            let input_el: HtmlInputElement = e.target_unchecked_into();
-            Message::SetPassword(input_el.value())
-        });
-
-        let on_click = {
-            let namn_ref = self.namn_ref.clone();
-            let password_ref = self.password_ref.clone();
-            ctx.link().callback(move |e: MouseEvent| {
-                let namn_element = namn_ref.cast::<HtmlInputElement>().unwrap();
-                let password_element = password_ref.cast::<HtmlInputElement>().unwrap();
-                if namn_element.value().is_empty() || password_element.value().is_empty() {
-                    log::debug!("Doing nothing");
-                    Message::DoNothing //Dit triggert eigenlijk nooit behalve bij initiale creatie want button is disabled... weghalen misschien? Todo
-                } else {
-                    Message::Submit
-                }
-            })
-        };
+        let on_click = { ctx.link().callback(move |e: MouseEvent| Message::Submit) };
         html! {
         <div class="flex items-center justify-center min-h-screen bg-gray-100">
             <div class="px-8 py-6 mt-4 text-left bg-white shadow-lg">
@@ -186,17 +180,22 @@ impl Component for LoginFormComponent {
                 <div class="mt-4">
                     <div>
                         <label class="block" for="namn">{"Namn"}</label>
-                        <input ref={self.namn_ref.clone()} id="namn" type="text" placeholder={"Namn"} oninput={on_namn_input}
+                        <input ref={self.namn_ref.clone()} id="namn" type="text" placeholder={"Namn"} oninput={on_input.clone()}
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="mt-4">
-                        <label class="block">{"Password"}</label>
-                        <input ref={self.password_ref.clone()} type="password" placeholder={"Password"} oninput={on_password_input}
+                        <label class="block">{"Lösenord"}</label>
+                        <input ref={self.lösenord_ref.clone()} type="lösenord" placeholder={"Lösenord"} oninput={on_input.clone()}
+                            class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block">{"Lösenord Extra"}</label>
+                        <input ref={self.lösenord_extra_ref.clone()} type="lösenord" placeholder={"Lösenord"} oninput={on_input.clone()}
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="flex items-baseline justify-between">
-                        <button ref={self.button_ref.clone()} onclick={on_click} class={self.button_classes.clone()}>{"Login"}</button>
-                        <a href="/register" class="text-sm text-blue-600 hover:underline">{"Don't have an account?"}</a>
+                        <button ref={self.button_ref.clone()} onclick={on_click} class={self.button_classes.clone()}>{"Register"}</button>
+                        <a href="/login" class="text-sm text-blue-600 hover:underline">{"Already have an account?"}</a>
                     </div>
                 </div>
             </div>

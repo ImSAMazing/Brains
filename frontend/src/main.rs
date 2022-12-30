@@ -5,6 +5,8 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 mod login_form_component;
+mod register_form_component;
+use crate::register_form_component::RegisterFormComponent;
 use crate::login_form_component::LoginFormComponent;
 
 #[function_component(Homepage)]
@@ -20,6 +22,11 @@ fn homepage() -> Html {
 #[function_component(Login)]
 fn login() -> Html {
     html! {<LoginFormComponent login_explainer={"Välkommen till Hjärnor!"}/>}
+}
+
+#[function_component(Register)]
+fn register() -> Html{
+    html!{<RegisterFormComponent register_explainer={"Välkommen till Hjärnor!"}/>}
 }
 #[function_component(HelloServer)]
 fn hello_server() -> Html {
@@ -76,6 +83,8 @@ enum Route {
     Home,
     #[at("/login")]
     Login,
+    #[at("/register")]
+    Register
 }
 
 fn switch(routes: Route) -> Html {
@@ -84,6 +93,7 @@ fn switch(routes: Route) -> Html {
             html! {<Homepage/>}
         }
         Route::Login => html! {<Login />},
+        Route::Register => html!{<Register/>}
     }
 }
 
