@@ -20,9 +20,9 @@ pub async fn skaffa_mig_fantasiforster_från_filter(
                 .iter()
                 .map(|a| FantasiforsterInformation {
                     id: a.id.to_string(),
-                    titel: a.titel.clone().unwrap(),
-                    innehåll: a.innehåll.clone().unwrap(),
-                    födelsedag: a.födelsedag.unwrap().into(),
+                    titel: a.titel.clone(),
+                    innehåll: a.innehåll.clone(),
+                    födelsedag: a.födelsedag.into(),
                     uppfinnare_namn: a.uppfinnare_namn.clone().unwrap(),
                 })
                 .collect(),

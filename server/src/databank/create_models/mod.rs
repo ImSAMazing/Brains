@@ -44,7 +44,7 @@ impl ProduceraFrånFörfrågan for ProduceraFantasiforsterFörfrågan {
         match create_query {
             Ok(result) => Some(ProduceraReaktion {
                 uuid: result.id,
-                födelsedag: result.födelsedag.unwrap().into(),
+                födelsedag: result.födelsedag.into(),
                 tillägen_information: None,
             }),
             Err(_) => None,
@@ -80,7 +80,7 @@ impl ProduceraFrånFörfrågan for RegistreraHjärnaFörfrågan {
             match create_query {
                 Ok(result) => Some(ProduceraReaktion {
                     uuid: result.id,
-                    födelsedag: result.födelsedag.unwrap().into(),
+                    födelsedag: result.födelsedag.into(),
                     tillägen_information: Some(password_hash.to_string()),
                 }),
                 Err(_) => None,
