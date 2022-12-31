@@ -2,20 +2,23 @@ use gloo_net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 use yew::classes;
 use yew::prelude::*;
+use yew_router::navigator;
 use yew_router::prelude::*;
 
-mod login_form_component;
-mod register_form_component;
-use crate::register_form_component::RegisterFormComponent;
-use crate::login_form_component::LoginFormComponent;
+mod components;
+use crate::components::authentication::login_form_component::LoginFormComponent;
+use crate::components::authentication::register_form_component::RegisterFormComponent;
+use crate::components::general::loading_component::LoadingComponent;
 
 #[function_component(Homepage)]
 fn homepage() -> Html {
+    let navigator = use_navigator().unwrap();
     let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
     if let Ok(Some(value)) = local_storage.get_item("token") {
         html! { <div><h1 class={classes!("text-center","text-red-400", "text-lg")}>{ format!("{}", value) }</h1> <a class={classes!("text-red-100")} href="/hello-server">{"Link"}</a></div> }
     } else {
-        html! {<Login/>}
+        navigator.push(&Route::Login);
+        html! {<LoadingComponent/>}
     }
 }
 
@@ -25,8 +28,15 @@ fn login() -> Html {
 }
 
 #[function_component(Register)]
-fn register() -> Html{
-    html!{<RegisterFormComponent register_explainer={"Välkommen till Hjärnor!"}/>}
+fn register() -> Html {
+    let navigator = use_navigator().unwrap();
+    let on_registration = Callback::from(move |value: String| {
+        let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+        if let Ok(()) = local_storage.set_item("token", &value) {
+            navigator.push(&Route::Home);
+        }
+    });
+    html! {<RegisterFormComponent on_succesfull_registration={on_registration} register_explainer={"Välkommen till Hjärnor!"}/>}
 }
 #[function_component(HelloServer)]
 fn hello_server() -> Html {
@@ -84,7 +94,7 @@ enum Route {
     #[at("/login")]
     Login,
     #[at("/register")]
-    Register
+    Register,
 }
 
 fn switch(routes: Route) -> Html {
@@ -93,7 +103,7 @@ fn switch(routes: Route) -> Html {
             html! {<Homepage/>}
         }
         Route::Login => html! {<Login />},
-        Route::Register => html!{<Register/>}
+        Route::Register => html! {<Register/>},
     }
 }
 

@@ -1,27 +1,33 @@
-use std::error;
-
 use gloo_net::http::Request;
-use shared::DemonstreraBesittarHjärnaFörfrågon;
 use shared::RegistreraHjärnaFörfrågan;
-use web_sys::HtmlButtonElement;
 use web_sys::HtmlDivElement;
 use web_sys::HtmlElement;
 use web_sys::HtmlInputElement;
-use web_sys::Node;
 use yew::classes;
+use yew::Callback;
 use yew::Classes;
 use yew::{html, Component, Html, InputEvent, MouseEvent, NodeRef, Properties, TargetCast};
 
 use wasm_bindgen_futures::spawn_local;
-#[derive(Properties, PartialEq)]
+use yew_router::prelude::Link;
+
+use crate::Route;
+
+#[derive(Properties, Clone, PartialEq)]
 pub struct RegisterFormProps {
     pub register_explainer: String,
+    pub on_succesfull_registration: Callback<String>,
+}
+
+struct AfterApiAction {
+    should_redraw: bool,
+    should_show_warning: bool,
 }
 
 pub enum Message {
     SetField,
     Submit,
-    DoNothing,
+    AfterApiResponse(AfterApiAction),
 }
 
 pub struct RegisterFormComponent {
@@ -30,30 +36,37 @@ pub struct RegisterFormComponent {
     lösenord_extra_ref: NodeRef,
     error_holder_ref: NodeRef,
     error_text_ref: NodeRef,
-    button_ref: NodeRef,
-    button_classes: Classes,
+    button_disabled: bool,
+    show_warning: bool,
 }
 
 impl RegisterFormComponent {
-    fn get_default_button_classes() -> Classes {
-        classes!(
-            "px-6",
-            "py-2",
-            "mt-4",
-            "text-white",
-            "bg-blue-600",
-            "rounded-lg",
-            "hover:bg-blue-900"
-        )
+    fn get_classes(&self) -> Classes {
+        if !self.button_disabled {
+            classes!(
+                "px-6",
+                "py-2",
+                "mt-4",
+                "text-white",
+                "bg-blue-600",
+                "rounded-lg",
+                "hover:bg-blue-900"
+            )
+        } else {
+            classes!(
+                "px-6",
+                "py-2",
+                "mt-4",
+                "text-white",
+                "bg-gray-300",
+                "rounded-lg",
+            )
+        }
     }
 
-    fn update_button_status(
-        &mut self,
-        namn: &String,
-        lösenord: &String,
-        lösenord_extra: &String,
-    ) -> bool {
-        if RegistreraHjärnaFörfrågan::validera(namn, lösenord, lösenord_extra) {
+    fn update_button_status(&mut self) -> bool {
+        let fields = self.get_input_fields_content();
+        if RegistreraHjärnaFörfrågan::validera(&fields.0, &fields.1, &fields.2) {
             self.set_button_enabled()
         } else {
             self.set_button_disabled()
@@ -61,30 +74,33 @@ impl RegisterFormComponent {
     }
 
     fn set_button_enabled(&mut self) -> bool {
-        let button_element = self.button_ref.cast::<HtmlButtonElement>().unwrap();
-        if button_element.disabled() {
-            button_element.set_disabled(false);
-            self.button_classes = RegisterFormComponent::get_default_button_classes();
+        if self.button_disabled {
+            self.button_disabled = false;
             return true;
         }
         false
     }
+
+    fn set_show_warning(&mut self) {
+        self.show_warning = true;
+    }
     fn set_button_disabled(&mut self) -> bool {
-        let button_element = self.button_ref.cast::<HtmlButtonElement>().unwrap();
-        if !button_element.disabled() {
-            button_element.set_disabled(true);
-            self.button_classes = classes!(
-                "px-6",
-                "py-2",
-                "mt-4",
-                "text-white",
-                "bg-gray-300",
-                "rounded-lg",
-                "hover:bg-gray-900"
-            );
+        if !self.button_disabled {
+            self.button_disabled = true;
             return true;
         }
         false
+    }
+
+    fn get_input_fields_content(&self) -> (String, String, String) {
+        let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
+        let namn = namn_element.value();
+        let lösenord_element = self.lösenord_ref.cast::<HtmlInputElement>().unwrap();
+        let lösenord = lösenord_element.value();
+        let lösenord_extra_element = self.lösenord_extra_ref.cast::<HtmlInputElement>().unwrap();
+        let lösenord_extra = lösenord_extra_element.value();
+
+        (namn, lösenord, lösenord_extra)
     }
 }
 
@@ -98,24 +114,13 @@ impl Component for RegisterFormComponent {
             lösenord_extra_ref: NodeRef::default(),
             error_holder_ref: NodeRef::default(),
             error_text_ref: NodeRef::default(),
-            button_ref: NodeRef::default(),
-            button_classes: RegisterFormComponent::get_default_button_classes(),
+            button_disabled: true,
+            show_warning: false,
         }
     }
-
     fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Message::SetField => {
-                let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
-                let namn = namn_element.value();
-                let lösenord_element = self.lösenord_ref.cast::<HtmlInputElement>().unwrap();
-                let lösenord = lösenord_element.value();
-                let lösenord_extra_element =
-                    self.lösenord_extra_ref.cast::<HtmlInputElement>().unwrap();
-                let lösenord_extra = lösenord_extra_element.value();
-
-                self.update_button_status(&namn, &lösenord, &lösenord_extra)
-            }
+            Message::SetField => self.update_button_status(),
             Message::Submit => {
                 self.set_button_disabled();
                 let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
@@ -131,7 +136,9 @@ impl Component for RegisterFormComponent {
                 let namn = namn_element.value();
                 let lösenord = lösenord_element.value();
                 let lösenord_extra = lösenord_extra_element.value();
-                spawn_local(async move {
+
+                let on_succesfull_registration = ctx.props().clone().on_succesfull_registration;
+                ctx.link().send_future(async move {
                     let resp = Request::post("/api/registerbrain")
                         .json(&RegistreraHjärnaFörfrågan::producera(
                             namn,
@@ -143,38 +150,46 @@ impl Component for RegisterFormComponent {
                         .await
                         .unwrap();
 
+                    let should_redraw = true;
+                    let should_show_warning = !resp.ok();
                     if !resp.ok() {
                         error_text_element
                             .set_inner_text(&resp.text().await.unwrap().replace("\"", ""));
-                        error_holder_element.set_hidden(false);
                     } else {
-                        log::debug!("{}", resp.text().await.unwrap());
                         lösenord_element.set_value("");
                         lösenord_extra_element.set_value("");
+                        on_succesfull_registration.emit(resp.text().await.unwrap());
                     }
+                    Message::AfterApiResponse(AfterApiAction {
+                        should_redraw,
+                        should_show_warning,
+                    })
                 });
-
-                self.set_button_enabled();
                 false
             }
-            Message::DoNothing => false,
+            Message::AfterApiResponse(action) => {
+                self.update_button_status();
+                if action.should_show_warning {
+                    self.show_warning = true;
+                } else {
+                    self.show_warning = false;
+                }
+                action.should_redraw
+            }
         }
     }
 
     fn view(&self, ctx: &yew::Context<Self>) -> Html {
         let explainer = &ctx.props().register_explainer;
 
-        let on_input = ctx.link().callback(move |e: InputEvent| {
-            let input_el: HtmlInputElement = e.target_unchecked_into();
-            Message::SetField
-        });
+        let on_input = ctx.link().callback(move |_e: InputEvent| Message::SetField);
 
-        let on_click = { ctx.link().callback(move |e: MouseEvent| Message::Submit) };
+        let on_click = { ctx.link().callback(move |_e: MouseEvent| Message::Submit) };
         html! {
         <div class="flex items-center justify-center min-h-screen bg-gray-100">
             <div class="px-8 py-6 mt-4 text-left bg-white shadow-lg">
                 <h3 class="text-2xl font-bold text-center">{explainer}</h3>
-                <div ref={self.error_holder_ref.clone()} class="mt-2 bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4" role="alert">
+                <div ref={self.error_holder_ref.clone()} hidden={!self.show_warning.clone()} class="mt-2 bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4" role="alert">
                     <p ref={self.error_text_ref.clone()}>{"Something not ideal might be happening."}</p>
                 </div>
                 <div class="mt-4">
@@ -194,8 +209,8 @@ impl Component for RegisterFormComponent {
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="flex items-baseline justify-between">
-                        <button ref={self.button_ref.clone()} onclick={on_click} class={self.button_classes.clone()}>{"Register"}</button>
-                        <a href="/login" class="text-sm text-blue-600 hover:underline">{"Already have an account?"}</a>
+                        <button disabled={self.button_disabled.clone()} onclick={on_click} class={self.get_classes()}>{"Register"}</button>
+                        <Link<Route> to={Route::Login} classes={classes!("text-sm", "text-blue-600", "hover:underline")}>{"Already have an account?"}</Link<Route>>
                     </div>
                 </div>
             </div>
