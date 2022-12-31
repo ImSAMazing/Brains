@@ -147,7 +147,7 @@ impl Component for RegisterFormComponent {
                 self.error_text = action.error_text;
                 true
             }
-            Message::DoNothing => true,
+            Message::DoNothing => false,
         }
     }
 
