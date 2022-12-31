@@ -1,14 +1,11 @@
 use gloo_net::http::Request;
 use shared::RegistreraHjärnaFörfrågan;
-use web_sys::HtmlDivElement;
-use web_sys::HtmlElement;
 use web_sys::HtmlInputElement;
 use yew::classes;
 use yew::Callback;
 use yew::Classes;
-use yew::{html, Component, Html, InputEvent, MouseEvent, NodeRef, Properties, TargetCast};
+use yew::{html, Component, Html, InputEvent, MouseEvent, NodeRef, Properties};
 
-use wasm_bindgen_futures::spawn_local;
 use yew_router::prelude::Link;
 
 use crate::Route;
@@ -19,23 +16,22 @@ pub struct RegisterFormProps {
     pub on_succesfull_registration: Callback<String>,
 }
 
-struct AfterApiAction {
-    should_redraw: bool,
-    should_show_warning: bool,
+pub struct AfterApiAction {
+    error_text: String,
 }
 
 pub enum Message {
     SetField,
     Submit,
     AfterApiResponse(AfterApiAction),
+    DoNothing,
 }
 
 pub struct RegisterFormComponent {
     namn_ref: NodeRef,
     lösenord_ref: NodeRef,
     lösenord_extra_ref: NodeRef,
-    error_holder_ref: NodeRef,
-    error_text_ref: NodeRef,
+    error_text: String,
     button_disabled: bool,
     show_warning: bool,
 }
@@ -66,30 +62,17 @@ impl RegisterFormComponent {
 
     fn update_button_status(&mut self) -> bool {
         let fields = self.get_input_fields_content();
-        if RegistreraHjärnaFörfrågan::validera(&fields.0, &fields.1, &fields.2) {
-            self.set_button_enabled()
-        } else {
-            self.set_button_disabled()
-        }
-    }
 
-    fn set_button_enabled(&mut self) -> bool {
-        if self.button_disabled {
-            self.button_disabled = false;
-            return true;
-        }
-        false
-    }
-
-    fn set_show_warning(&mut self) {
-        self.show_warning = true;
-    }
-    fn set_button_disabled(&mut self) -> bool {
-        if !self.button_disabled {
-            self.button_disabled = true;
-            return true;
-        }
-        false
+        let should_be_disabled =
+            if RegistreraHjärnaFörfrågan::validera(&fields.0, &fields.1, &fields.2) {
+                false
+            } else {
+                true
+            };
+        let will_value_change = should_be_disabled != self.button_disabled;
+        self.button_disabled = should_be_disabled;
+        log::debug!("{should_be_disabled}, {will_value_change}");
+        will_value_change
     }
 
     fn get_input_fields_content(&self) -> (String, String, String) {
@@ -99,7 +82,6 @@ impl RegisterFormComponent {
         let lösenord = lösenord_element.value();
         let lösenord_extra_element = self.lösenord_extra_ref.cast::<HtmlInputElement>().unwrap();
         let lösenord_extra = lösenord_extra_element.value();
-
         (namn, lösenord, lösenord_extra)
     }
 }
@@ -112,8 +94,7 @@ impl Component for RegisterFormComponent {
             namn_ref: NodeRef::default(),
             lösenord_ref: NodeRef::default(),
             lösenord_extra_ref: NodeRef::default(),
-            error_holder_ref: NodeRef::default(),
-            error_text_ref: NodeRef::default(),
+            error_text: String::default(),
             button_disabled: true,
             show_warning: false,
         }
@@ -122,16 +103,13 @@ impl Component for RegisterFormComponent {
         match msg {
             Message::SetField => self.update_button_status(),
             Message::Submit => {
-                self.set_button_disabled();
+                self.button_disabled = true;
+                self.show_warning = false;
+
                 let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
                 let lösenord_element = self.lösenord_ref.cast::<HtmlInputElement>().unwrap();
                 let lösenord_extra_element =
                     self.lösenord_extra_ref.cast::<HtmlInputElement>().unwrap();
-
-                let error_holder_element = self.error_holder_ref.cast::<HtmlDivElement>().unwrap();
-                error_holder_element.set_hidden(true);
-
-                let error_text_element = self.error_text_ref.cast::<HtmlElement>().unwrap();
 
                 let namn = namn_element.value();
                 let lösenord = lösenord_element.value();
@@ -150,32 +128,26 @@ impl Component for RegisterFormComponent {
                         .await
                         .unwrap();
 
-                    let should_redraw = true;
-                    let should_show_warning = !resp.ok();
+                    let response_text = resp.text().await.unwrap().replace("\"", "");
                     if !resp.ok() {
-                        error_text_element
-                            .set_inner_text(&resp.text().await.unwrap().replace("\"", ""));
+                        Message::AfterApiResponse(AfterApiAction {
+                            error_text: response_text,
+                        })
                     } else {
-                        lösenord_element.set_value("");
-                        lösenord_extra_element.set_value("");
-                        on_succesfull_registration.emit(resp.text().await.unwrap());
+                        on_succesfull_registration.emit(response_text);
+                        Message::DoNothing
                     }
-                    Message::AfterApiResponse(AfterApiAction {
-                        should_redraw,
-                        should_show_warning,
-                    })
                 });
-                false
+                true
             }
             Message::AfterApiResponse(action) => {
                 self.update_button_status();
-                if action.should_show_warning {
-                    self.show_warning = true;
-                } else {
-                    self.show_warning = false;
-                }
-                action.should_redraw
+                self.show_warning = true;
+
+                self.error_text = action.error_text;
+                true
             }
+            Message::DoNothing => true,
         }
     }
 
@@ -189,23 +161,23 @@ impl Component for RegisterFormComponent {
         <div class="flex items-center justify-center min-h-screen bg-gray-100">
             <div class="px-8 py-6 mt-4 text-left bg-white shadow-lg">
                 <h3 class="text-2xl font-bold text-center">{explainer}</h3>
-                <div ref={self.error_holder_ref.clone()} hidden={!self.show_warning.clone()} class="mt-2 bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4" role="alert">
-                    <p ref={self.error_text_ref.clone()}>{"Something not ideal might be happening."}</p>
+                <div hidden={!self.show_warning.clone()} class="mt-2 bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4" role="alert">
+                    <p>{self.error_text.clone()}</p>
                 </div>
                 <div class="mt-4">
                     <div>
-                        <label class="block" for="namn">{"Namn"}</label>
-                        <input ref={self.namn_ref.clone()} id="namn" type="text" placeholder={"Namn"} oninput={on_input.clone()}
+                        <label class="block">{"Namn"}</label>
+                        <input ref={self.namn_ref.clone()} type="text" placeholder={"Namn"} oninput={on_input.clone()}
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="mt-4">
                         <label class="block">{"Lösenord"}</label>
-                        <input ref={self.lösenord_ref.clone()} type="lösenord" placeholder={"Lösenord"} oninput={on_input.clone()}
+                        <input ref={self.lösenord_ref.clone()} type="password" placeholder={"Lösenord"} oninput={on_input.clone()}
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="mt-4">
                         <label class="block">{"Lösenord Extra"}</label>
-                        <input ref={self.lösenord_extra_ref.clone()} type="lösenord" placeholder={"Lösenord"} oninput={on_input.clone()}
+                        <input ref={self.lösenord_extra_ref.clone()} type="password" placeholder={"Lösenord"} oninput={on_input.clone()}
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="flex items-baseline justify-between">

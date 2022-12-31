@@ -2,7 +2,6 @@ use gloo_net::http::Request;
 use wasm_bindgen_futures::spawn_local;
 use yew::classes;
 use yew::prelude::*;
-use yew_router::navigator;
 use yew_router::prelude::*;
 
 mod components;
@@ -20,6 +19,19 @@ fn homepage() -> Html {
         navigator.push(&Route::Login);
         html! {<LoadingComponent/>}
     }
+}
+
+#[function_component(Logout)]
+fn logout() -> Html {
+    let navigator = use_navigator().unwrap();
+    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+    let target = if let Err(_) = local_storage.delete("token") {
+        &Route::Home
+    } else {
+        &Route::Login
+    };
+    navigator.push(target);
+    html! {<LoadingComponent/>}
 }
 
 #[function_component(Login)]
@@ -95,6 +107,8 @@ enum Route {
     Login,
     #[at("/register")]
     Register,
+    #[at("/logout")]
+    Logout,
 }
 
 fn switch(routes: Route) -> Html {
@@ -104,6 +118,7 @@ fn switch(routes: Route) -> Html {
         }
         Route::Login => html! {<Login />},
         Route::Register => html! {<Register/>},
+        Route::Logout => html! {<Logout/>},
     }
 }
 

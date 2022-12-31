@@ -16,11 +16,11 @@ impl Component for LoadingComponent {
         Self {}
     }
 
-    fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {}
     }
 
-    fn view(&self, ctx: &yew::Context<Self>) -> Html {
+    fn view(&self, _ctx: &yew::Context<Self>) -> Html {
         html! {
         <div class="flex justify-center items-center">
             <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full" role="status">

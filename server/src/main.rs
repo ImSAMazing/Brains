@@ -8,9 +8,7 @@ use axum::{
 };
 use clap::Parser;
 use databank::{
-    create_models::{self, ProduceraFrånFörfrågan},
-    losenord_verifiera::verifiera_lösenord,
-    skaffa_models,
+    create_models::ProduceraFrånFörfrågan, losenord_verifiera::verifiera_lösenord, skaffa_models,
 };
 use shared::{
     DemonstreraBesittarHjärnaFörfrågon, Fantasiforster, FantasiforsterFilter, Hjärna,
@@ -96,9 +94,6 @@ async fn main() {
         .expect("Unable to start server");
 }
 
-async fn handle_404() -> impl IntoResponse {
-    (StatusCode::NOT_FOUND, "Nothing to see here")
-}
 async fn hello() -> impl IntoResponse {
     "hello from server!"
 }
@@ -126,9 +121,9 @@ async fn producera_fantasiforster(
     }
 }
 
-async fn skaffa_mig_era_fantasiforster(
+async fn _skaffa_mig_era_fantasiforster(
     State(pool): State<ConnectionPool>,
-    jwt_information: JwtInformation,
+    _jwt_information: JwtInformation,
     result: Result<Json<FantasiforsterFilter>, JsonRejection>,
 ) -> impl IntoResponse {
     let filter = if let Ok(Json(payload)) = result {
@@ -137,7 +132,7 @@ async fn skaffa_mig_era_fantasiforster(
         FantasiforsterFilter::default()
     };
     if let Some(fantasiforster) =
-        skaffa_models::skaffa_mig_fantasiforster_från_filter(pool, filter).await
+        skaffa_models::_skaffa_mig_fantasiforster_från_filter(pool, filter).await
     {
         Ok((StatusCode::OK, Json(fantasiforster)))
     } else {

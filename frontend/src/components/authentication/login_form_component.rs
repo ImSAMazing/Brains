@@ -1,12 +1,9 @@
-use std::error;
-
 use gloo_net::http::Request;
 use shared::DemonstreraBesittarHjärnaFörfrågon;
 use web_sys::HtmlButtonElement;
 use web_sys::HtmlDivElement;
 use web_sys::HtmlElement;
 use web_sys::HtmlInputElement;
-use web_sys::Node;
 use yew::classes;
 use yew::Classes;
 use yew::{html, Component, Html, InputEvent, MouseEvent, NodeRef, Properties, TargetCast};
@@ -96,7 +93,7 @@ impl Component for LoginFormComponent {
         }
     }
 
-    fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Message::SetNamn(val) => {
                 let password_element = self.password_ref.cast::<HtmlInputElement>().unwrap();
@@ -165,7 +162,7 @@ impl Component for LoginFormComponent {
         let on_click = {
             let namn_ref = self.namn_ref.clone();
             let password_ref = self.password_ref.clone();
-            ctx.link().callback(move |e: MouseEvent| {
+            ctx.link().callback(move |_e: MouseEvent| {
                 let namn_element = namn_ref.cast::<HtmlInputElement>().unwrap();
                 let password_element = password_ref.cast::<HtmlInputElement>().unwrap();
                 if namn_element.value().is_empty() || password_element.value().is_empty() {

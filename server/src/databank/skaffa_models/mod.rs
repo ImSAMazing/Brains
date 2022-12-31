@@ -1,11 +1,9 @@
-use axum::async_trait;
-use chrono::{DateTime, Local};
-use shared::{Fantasiforster, FantasiforsterFilter, FantasiforsterInformation};
-use sqlx::{types::Uuid, Pool, Postgres};
+use shared::{FantasiforsterFilter, FantasiforsterInformation};
+use sqlx::{Pool, Postgres};
 
-pub async fn skaffa_mig_fantasiforster_från_filter(
+pub async fn _skaffa_mig_fantasiforster_från_filter(
     pool: Pool<Postgres>,
-    filter: FantasiforsterFilter,
+    _filter: FantasiforsterFilter,
 ) -> Option<Vec<FantasiforsterInformation>> {
     let select_query = sqlx::query!(
         "select id, titel, innehåll, födelsedag, (select hjärnannamn from hjärnor where id=uppfinnare LIMIT 1) as uppfinnare_namn FROM
