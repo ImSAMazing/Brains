@@ -1,6 +1,6 @@
 create table hjärnor(
 	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-	hjärnannamn VARCHAR(255) NOT NULL,
+	hjärnannamn VARCHAR(255) NOT NULL UNIQUE,
 	lösenord VARCHAR(255) NOT NULL,
 	födelsedag TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
