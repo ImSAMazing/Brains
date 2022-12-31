@@ -36,7 +36,14 @@ fn logout() -> Html {
 
 #[function_component(Login)]
 fn login() -> Html {
-    html! {<LoginFormComponent login_explainer={"Välkommen till Hjärnor!"}/>}
+    let navigator = use_navigator().unwrap();
+    let on_login = Callback::from(move |value: String| {
+        let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+        if let Ok(()) = local_storage.set_item("token", &value) {
+            navigator.push(&Route::Home);
+        }
+    });
+    html! {<LoginFormComponent on_succesfull_login={on_login} login_explainer={"Välkommen till Hjärnor!"}/>}
 }
 
 #[function_component(Register)]

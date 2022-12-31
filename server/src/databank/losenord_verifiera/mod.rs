@@ -18,6 +18,7 @@ pub async fn verifiera_lösenord(
     if let Ok(result) = hjärna_query {
         let argon2 = Argon2::default();
         let parsed_hash = PasswordHash::new(&result.lösenord).unwrap();
+        //tokio::time::sleep(tokio::time::Duration::from_millis(10000)).await;
         if argon2
             .verify_password(
                 förfrågon.skaffa_mig_ditt_lösenord().as_bytes(),

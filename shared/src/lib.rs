@@ -169,4 +169,8 @@ impl DemonstreraBesittarHjärnaFörfrågon {
             lösenord,
         }
     }
+
+    pub fn validera(hjärnannamn: &str, lösenord: &str) -> bool {
+        !hjärnannamn.is_empty() && !lösenord.is_empty()
+    }
 }
