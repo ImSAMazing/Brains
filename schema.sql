@@ -3,7 +3,7 @@ create table hjärnor(
 	hjärnannamn VARCHAR(255) NOT NULL UNIQUE,
 	lösenord VARCHAR(255) NOT NULL,
 	födelsedag TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-	senasteuppdateringdag TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	senasteuppdateringdag TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 create table fantasifoster(
 	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -12,6 +12,6 @@ create table fantasifoster(
 	födelsedag TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 	uppfinnare UUID,
 	CONSTRAINT fk_hjärnor FOREIGN KEY(uppfinnare) REFERENCES hjärnor(id)
-	)
+	);
 	
 	
