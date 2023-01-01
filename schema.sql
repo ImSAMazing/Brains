@@ -2,7 +2,8 @@ create table hjärnor(
 	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
 	hjärnannamn VARCHAR(255) NOT NULL UNIQUE,
 	lösenord VARCHAR(255) NOT NULL,
-	födelsedag TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	födelsedag TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	senasteuppdateringdag TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 );
 create table fantasifoster(
 	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
