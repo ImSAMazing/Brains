@@ -174,3 +174,9 @@ impl DemonstreraBesittarHjärnaFörfrågon {
         !hjärnannamn.is_empty() && !lösenord.is_empty()
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct JwtInformation {
+    pub hjärnannamn: String,
+    pub id: Uuid,
+}

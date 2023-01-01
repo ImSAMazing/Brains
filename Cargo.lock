@@ -564,6 +564,7 @@ version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
  "gloo-net",
+ "jsonwebtoken",
  "log",
  "serde",
  "serde_json",

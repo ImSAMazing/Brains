@@ -1,4 +1,4 @@
-use autentisering::{producera_jwt, JwtInformation};
+use autentisering::{producera_jwt, Claims};
 use axum::{
     extract::{rejection::JsonRejection, State},
     http::StatusCode,
@@ -100,10 +100,11 @@ async fn hello() -> impl IntoResponse {
 
 async fn producera_fantasiforster(
     State(pool): State<ConnectionPool>,
-    jwt_information: JwtInformation,
+    claims: Claims,
     result: Result<Json<ProduceraFantasiforsterFörfrågan>, JsonRejection>,
 ) -> impl IntoResponse {
-    let uppfinnare_id = jwt_information.id;
+    let jwt_information = claims.information;
+    let uppfinnare_id = Uuid::parse_str(&jwt_information.id).unwrap();
     match result {
         Ok(Json(payload)) => match payload.producera(pool, uppfinnare_id).await {
             Some(reaktion) => {
@@ -123,7 +124,7 @@ async fn producera_fantasiforster(
 
 async fn _skaffa_mig_era_fantasiforster(
     State(pool): State<ConnectionPool>,
-    _jwt_information: JwtInformation,
+    _claims: Claims,
     result: Result<Json<FantasiforsterFilter>, JsonRejection>,
 ) -> impl IntoResponse {
     let filter = if let Ok(Json(payload)) = result {

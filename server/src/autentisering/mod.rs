@@ -8,25 +8,21 @@ use axum::{
 use chrono::Utc;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
+use shared::JwtInformation;
 use sqlx::types::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct JwtInformation {
-    pub hjärnannamn: String,
-    pub id: Uuid,
-}
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
+pub struct Claims {
     sub: String,
     aud: String,
     iat: usize,
     iss: String,
     exp: usize,
-    information: JwtInformation,
+    pub information: JwtInformation,
 }
 
 #[async_trait]
-impl<B> FromRequestParts<B> for JwtInformation
+impl<B> FromRequestParts<B> for Claims
 where
     B: Send + Sync,
 {
@@ -86,7 +82,13 @@ fn skaffa_mig_din_hemlighet_decoding() -> DecodingKey {
 }
 
 pub fn producera_jwt(id: Uuid, hjärnannamn: String) -> String {
-    producera_jwt_från_information(id, JwtInformation { id, hjärnannamn })
+    producera_jwt_från_information(
+        id,
+        JwtInformation {
+            id: id.to_string(),
+            hjärnannamn: hjärnannamn,
+        },
+    )
 }
 
 fn producera_jwt_från_information(id: Uuid, information: JwtInformation) -> String {
@@ -95,13 +97,13 @@ fn producera_jwt_från_information(id: Uuid, information: JwtInformation) -> Str
     token.unwrap()
 }
 
-pub fn konvertera_jwt(raw_token: &str) -> Option<JwtInformation> {
+pub fn konvertera_jwt(raw_token: &str) -> Option<Claims> {
     let mut validator = Validation::default();
     validator.set_audience(&[Claims::skaffa_mig_audience()]);
     validator.set_issuer(&[Claims::skaffa_mig_issuer()]);
     if let Ok(token) = decode::<Claims>(raw_token, &skaffa_mig_din_hemlighet_decoding(), &validator)
     {
-        Some(token.claims.information)
+        Some(token.claims)
     } else {
         None
     }
