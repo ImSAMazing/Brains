@@ -1,62 +1,22 @@
 use gloo_net::http::Request;
+use pages::homepage::HomePage;
+use pages::loginpage::LoginPage;
+use pages::logoutpage::LogoutPage;
+use pages::registerpage::RegisterPage;
 use wasm_bindgen_futures::spawn_local;
-use yew::classes;
+use web_sys::Storage;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
 mod components;
-use crate::components::authentication::login_form_component::LoginFormComponent;
-use crate::components::authentication::register_form_component::RegisterFormComponent;
-use crate::components::general::loading_component::LoadingComponent;
+mod pages;
 
-#[function_component(Homepage)]
-fn homepage() -> Html {
-    let navigator = use_navigator().unwrap();
-    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
-    if let Ok(Some(value)) = local_storage.get_item("token") {
-        html! { <div><h1 class={classes!("text-center","text-red-400", "text-lg")}>{ format!("{}", value) }</h1> <a class={classes!("text-red-100")} href="/hello-server">{"Link"}</a></div> }
-    } else {
-        navigator.push(&Route::Login);
-        html! {<LoadingComponent/>}
+pub trait HelperService {
+    fn get_storage(&self) -> Storage {
+        web_sys::window().unwrap().local_storage().unwrap().unwrap()
     }
 }
 
-#[function_component(Logout)]
-fn logout() -> Html {
-    let navigator = use_navigator().unwrap();
-    let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
-    let target = if let Err(_) = local_storage.delete("token") {
-        &Route::Home
-    } else {
-        &Route::Login
-    };
-    navigator.push(target);
-    html! {<LoadingComponent/>}
-}
-
-#[function_component(Login)]
-fn login() -> Html {
-    let navigator = use_navigator().unwrap();
-    let on_login = Callback::from(move |value: String| {
-        let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
-        if let Ok(()) = local_storage.set_item("token", &value) {
-            navigator.push(&Route::Home);
-        }
-    });
-    html! {<LoginFormComponent on_succesfull_login={on_login} login_explainer={"Välkommen till Hjärnor!"}/>}
-}
-
-#[function_component(Register)]
-fn register() -> Html {
-    let navigator = use_navigator().unwrap();
-    let on_registration = Callback::from(move |value: String| {
-        let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
-        if let Ok(()) = local_storage.set_item("token", &value) {
-            navigator.push(&Route::Home);
-        }
-    });
-    html! {<RegisterFormComponent on_succesfull_registration={on_registration} register_explainer={"Välkommen till Hjärnor!"}/>}
-}
 #[function_component(HelloServer)]
 fn hello_server() -> Html {
     let data = use_state(|| None);
@@ -121,11 +81,11 @@ enum Route {
 fn switch(routes: Route) -> Html {
     match routes {
         Route::Home => {
-            html! {<Homepage/>}
+            html! {<HomePage/>}
         }
-        Route::Login => html! {<Login />},
-        Route::Register => html! {<Register/>},
-        Route::Logout => html! {<Logout/>},
+        Route::Login => html! {<LoginPage />},
+        Route::Register => html! {<RegisterPage/>},
+        Route::Logout => html! {<LogoutPage/>},
     }
 }
 
