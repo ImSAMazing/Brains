@@ -7,6 +7,7 @@ pub enum Message {}
 
 pub struct UserInfoComponent {}
 
+impl HelperService for UserInfoComponent {}
 impl UserInfoComponent {}
 
 impl Component for UserInfoComponent {

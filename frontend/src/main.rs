@@ -1,8 +1,10 @@
 use gloo_net::http::Request;
+use jsonwebtoken::{decode, DecodingKey, Validation};
 use pages::homepage::HomePage;
 use pages::loginpage::LoginPage;
 use pages::logoutpage::LogoutPage;
 use pages::registerpage::RegisterPage;
+use shared::JwtInformation;
 use wasm_bindgen_futures::spawn_local;
 use web_sys::Storage;
 use yew::prelude::*;
@@ -14,6 +16,15 @@ mod pages;
 pub trait HelperService {
     fn get_storage(&self) -> Storage {
         web_sys::window().unwrap().local_storage().unwrap().unwrap()
+    }
+
+    fn get_jwt_information(&self) -> Option<JwtInformation> {
+        let storage = self.get_storage();
+        if let Ok(Some(token)) = storage.get_item("token") {
+            None
+        } else {
+            None
+        }
     }
 }
 
