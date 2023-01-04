@@ -2,3 +2,5 @@ target/
 dist/
 target-trunk/
 .env
+server/private.pem
+private.pem

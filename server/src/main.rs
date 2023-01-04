@@ -1,4 +1,4 @@
-use autentisering::{producera_jwt, Claims};
+use autentisering::{producera_jwt, JwtDataHolder};
 use axum::{
     extract::{rejection::JsonRejection, State},
     http::StatusCode,
@@ -10,6 +10,7 @@ use clap::Parser;
 use databank::{
     create_models::ProduceraFrånFörfrågan, losenord_verifiera::verifiera_lösenord, skaffa_models,
 };
+use jwt_simple::prelude::ES384KeyPair;
 use shared::{
     DemonstreraBesittarHjärnaFörfrågon, Fantasiforster, FantasiforsterFilter, Hjärna,
     ProduceraFantasiforsterFörfrågan, RegistreraHjärnaFörfrågan,
@@ -95,12 +96,17 @@ async fn main() {
 }
 
 async fn hello() -> impl IntoResponse {
-    "hello from server!"
+    let key_pair = ES384KeyPair::generate();
+    format!(
+        "{:?}, {:?}",
+        key_pair.public_key().to_pem(),
+        key_pair.to_pem()
+    )
 }
 
 async fn producera_fantasiforster(
     State(pool): State<ConnectionPool>,
-    claims: Claims,
+    claims: JwtDataHolder,
     result: Result<Json<ProduceraFantasiforsterFörfrågan>, JsonRejection>,
 ) -> impl IntoResponse {
     let jwt_information = claims.information;
@@ -124,7 +130,7 @@ async fn producera_fantasiforster(
 
 async fn _skaffa_mig_era_fantasiforster(
     State(pool): State<ConnectionPool>,
-    _claims: Claims,
+    _claims: JwtDataHolder,
     result: Result<Json<FantasiforsterFilter>, JsonRejection>,
 ) -> impl IntoResponse {
     let filter = if let Ok(Json(payload)) = result {

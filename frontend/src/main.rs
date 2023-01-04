@@ -1,5 +1,6 @@
 use gloo_net::http::Request;
-use jsonwebtoken::{decode, DecodingKey, Validation};
+use jwt_simple::prelude::*;
+use once_cell::sync::Lazy;
 use pages::homepage::HomePage;
 use pages::loginpage::LoginPage;
 use pages::logoutpage::LogoutPage;
@@ -9,9 +10,24 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::Storage;
 use yew::prelude::*;
 use yew_router::prelude::*;
-
 mod components;
 mod pages;
+
+static PUBLIC_KEY: Lazy<RS384PublicKey> = Lazy::new(|| {
+    RS384PublicKey::from_pem(
+        "-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvlovXOLvdmIGZB71gKLi
+KkynPnLA1tFQ9DX9i2ANLXSir58FivBjyHP3WZ9FHzvYSEbOzv3ElxVaPWGRaayL
+B8UV3gDcjjXFAOCPSe7QypaZ2KpwgRNFWXQ6d11BMA1jp9lVApiAx+wYPhRuflPf
+2LDAPt+BBp1ihpNwcO8PreEm9DkKZsP8IDuZ3axQT3UmlYWm4EezQntCP0TyAkPv
+m8Y1IErh99GL4z5FyUoR04/lrPHbkZPEOX4fQSRiG211JYbGfDG6K20KxX+Gtew3
+GkxP/Kcl8B4ujcYkzJhC/rq5X4MX/5YuJhpTs9C1/0s6Lm7SMW2Nkbj7r3pFXX0o
+TwIDAQAB
+-----END PUBLIC KEY-----
+",
+    )
+    .unwrap()
+});
 
 pub trait HelperService {
     fn get_storage(&self) -> Storage {
@@ -21,7 +37,7 @@ pub trait HelperService {
     fn get_jwt_information(&self) -> Option<JwtInformation> {
         let storage = self.get_storage();
         if let Ok(Some(token)) = storage.get_item("token") {
-            None
+            Some(PUBLIC_KEY.verify_token(&token, None).unwrap().custom)
         } else {
             None
         }

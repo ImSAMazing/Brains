@@ -5,24 +5,18 @@ use axum::{
     http::{request::Parts, StatusCode},
     TypedHeader,
 };
-use chrono::Utc;
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use jwt_simple::prelude::*;
 use serde::{Deserialize, Serialize};
 use shared::JwtInformation;
 use sqlx::types::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    sub: String,
-    aud: String,
-    iat: usize,
-    iss: String,
-    exp: usize,
+pub struct JwtDataHolder {
     pub information: JwtInformation,
 }
 
 #[async_trait]
-impl<B> FromRequestParts<B> for Claims
+impl<B> FromRequestParts<B> for JwtDataHolder
 where
     B: Send + Sync,
 {
@@ -31,8 +25,8 @@ where
         if let Ok(TypedHeader(Authorization(bearer))) =
             TypedHeader::<Authorization<Bearer>>::from_request_parts(parts, state).await
         {
-            if let Some(data) = konvertera_jwt(bearer.token()) {
-                Ok(data)
+            if let Some(information) = konvertera_jwt(bearer.token()) {
+                Ok(JwtDataHolder { information })
             } else {
                 Err(StatusCode::UNPROCESSABLE_ENTITY)
             }
@@ -42,43 +36,21 @@ where
     }
 }
 
-impl Claims {
+impl JwtDataHolder {
     fn skaffa_mig_audience() -> String {
         "HjärnorFörening".to_string()
     }
     fn skaffa_mig_issuer() -> String {
         "Hjärnan".to_string()
     }
-    fn skaffa_mig_tidsspan() -> i64 {
-        7 * 24 * 60 * 60
-    }
-    fn producera(id: Uuid, information: JwtInformation) -> Claims {
-        let now = Utc::now().timestamp();
-        Claims {
-            sub: id.to_string(),
-            aud: Claims::skaffa_mig_audience(),
-            iss: Claims::skaffa_mig_issuer(),
-            iat: now as usize,
-            exp: (now + Claims::skaffa_mig_tidsspan()) as usize,
-            information,
-        }
-    }
 }
 
-fn skaffa_mig_din_hemlighet() -> EncodingKey {
-    EncodingKey::from_secret(
-        std::env::var("JWT_KEY")
-            .expect("JWT_KEY environmental variable not set")
-            .as_bytes(),
-    )
+fn skaffa_mig_din_hemlighet() -> RS384KeyPair {
+    RS384KeyPair::from_pem(&std::fs::read_to_string("private.pem").unwrap()).unwrap()
 }
 
-fn skaffa_mig_din_hemlighet_decoding() -> DecodingKey {
-    DecodingKey::from_secret(
-        std::env::var("JWT_KEY")
-            .expect("JWT_KEY environmental variable not set")
-            .as_bytes(),
-    )
+fn skaffa_mig_din_hemlighet_public() -> RS384PublicKey {
+    RS384PublicKey::from_pem(&std::fs::read_to_string("public.pem").unwrap()).unwrap()
 }
 
 pub fn producera_jwt(id: Uuid, hjärnannamn: String) -> String {
@@ -92,18 +64,35 @@ pub fn producera_jwt(id: Uuid, hjärnannamn: String) -> String {
 }
 
 fn producera_jwt_från_information(id: Uuid, information: JwtInformation) -> String {
-    let claims = Claims::producera(id, information);
-    let token = encode(&Header::default(), &claims, &skaffa_mig_din_hemlighet());
+    let claims = Claims::with_custom_claims(
+        information,
+        Duration::from_hours(
+            std::env::var("TOKEN_DURATION_DAYS")
+                .expect("TOKEN_DURATION_DAYS environmental variable not set")
+                .parse()
+                .expect("TOKEN_DURATION_DAYS is not an integer (i64)"),
+        ),
+    )
+    .with_audience(JwtDataHolder::skaffa_mig_audience())
+    .with_issuer(JwtDataHolder::skaffa_mig_issuer())
+    .with_subject(id);
+    let token = skaffa_mig_din_hemlighet().sign(claims);
     token.unwrap()
 }
 
-pub fn konvertera_jwt(raw_token: &str) -> Option<Claims> {
-    let mut validator = Validation::default();
-    validator.set_audience(&[Claims::skaffa_mig_audience()]);
-    validator.set_issuer(&[Claims::skaffa_mig_issuer()]);
-    if let Ok(token) = decode::<Claims>(raw_token, &skaffa_mig_din_hemlighet_decoding(), &validator)
+pub fn konvertera_jwt(raw_token: &str) -> Option<JwtInformation> {
+    let mut options = VerificationOptions::default();
+    // reject tokens if they don't include an issuer from that list
+    options.allowed_issuers = Some(HashSet::from_strings(&[JwtDataHolder::skaffa_mig_issuer()]));
+    options.allowed_audiences = Some(HashSet::from_strings(&[
+        JwtDataHolder::skaffa_mig_audience(),
+    ]));
+    // see the documentation for the full list of available options
+
+    if let Ok(claims) =
+        skaffa_mig_din_hemlighet_public().verify_token::<JwtInformation>(raw_token, Some(options))
     {
-        Some(token.claims)
+        Some(claims.custom)
     } else {
         None
     }

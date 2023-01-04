@@ -1,5 +1,7 @@
 use yew::{html, Component, Html, Properties};
 
+use crate::HelperService;
+
 #[derive(Properties, Clone, PartialEq)]
 pub struct UserInfoProps {}
 
@@ -24,9 +26,7 @@ impl Component for UserInfoComponent {
     fn view(&self, _ctx: &yew::Context<Self>) -> Html {
         html! {
         <div class="flex justify-center items-center">
-            <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full" role="status">
-              <span class="visually-hidden">{"Loading..."}</span>
-            </div>
+            <h1>{format!("Välkommen till Hjärnor, {}",self.get_jwt_information().unwrap().hjärnannamn)}</h1>
         </div>
         }
     }

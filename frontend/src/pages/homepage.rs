@@ -1,7 +1,12 @@
 use yew::{classes, html, Component, Html, Properties};
 use yew_router::scope_ext::RouterScopeExt;
 
-use crate::{components::general::loading_component::LoadingComponent, HelperService, Route};
+use crate::{
+    components::general::{
+        loading_component::LoadingComponent, user_info_component::UserInfoComponent,
+    },
+    HelperService, Route,
+};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct HomePageProps {}
@@ -28,7 +33,7 @@ impl Component for HomePage {
         let navigator = ctx.link().navigator().unwrap();
         let local_storage = self.get_storage();
         if let Ok(Some(value)) = local_storage.get_item("token") {
-            html! { <div><h1 class={classes!("text-center","text-red-400", "text-lg")}>{ format!("{}", value) }</h1> <a class={classes!("text-red-100")} href="/hello-server">{"Link"}</a></div> }
+            html! { <div><UserInfoComponent/></div> }
         } else {
             navigator.push(&Route::Login);
             html! {<LoadingComponent/>}
