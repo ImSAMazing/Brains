@@ -66,7 +66,7 @@ pub fn producera_jwt(id: Uuid, hjärnannamn: String) -> String {
 fn producera_jwt_från_information(id: Uuid, information: JwtInformation) -> String {
     let claims = Claims::with_custom_claims(
         information,
-        Duration::from_hours(
+        Duration::from_days(
             std::env::var("TOKEN_DURATION_DAYS")
                 .expect("TOKEN_DURATION_DAYS environmental variable not set")
                 .parse()

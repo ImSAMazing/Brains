@@ -3,7 +3,8 @@ use yew_router::scope_ext::RouterScopeExt;
 
 use crate::{
     components::general::{
-        loading_component::LoadingComponent, user_info_component::UserInfoComponent,
+        loading_component::LoadingComponent, navbar_component::NavbarComponent,
+        user_info_component::UserInfoComponent,
     },
     HelperService, Route,
 };
@@ -31,9 +32,8 @@ impl Component for HomePage {
 
     fn view(&self, ctx: &yew::Context<Self>) -> Html {
         let navigator = ctx.link().navigator().unwrap();
-        let local_storage = self.get_storage();
-        if let Ok(Some(value)) = local_storage.get_item("token") {
-            html! { <div><UserInfoComponent/></div> }
+        if let Some(_) = self.get_jwt_information() {
+            html! { <div><NavbarComponent/></div> }
         } else {
             navigator.push(&Route::Login);
             html! {<LoadingComponent/>}

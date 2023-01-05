@@ -37,7 +37,11 @@ pub trait HelperService {
     fn get_jwt_information(&self) -> Option<JwtInformation> {
         let storage = self.get_storage();
         if let Ok(Some(token)) = storage.get_item("token") {
-            Some(PUBLIC_KEY.verify_token(&token, None).unwrap().custom)
+            if let Ok(token) = PUBLIC_KEY.verify_token(&token, None) {
+                Some(token.custom)
+            } else {
+                None
+            }
         } else {
             None
         }
