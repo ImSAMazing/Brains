@@ -74,6 +74,7 @@ async fn main() {
         .route("/api/hello", get(hello))
         .route("/api/createbrainfart", post(producera_fantasiforster))
         .route("/api/registerbrain", post(registrera_hjärna))
+        .route("/api/getbrainfarts", get(skaffa_mig_era_fantasiforster))
         .route("/api/loginasbrain", post(demonstrera_jag_besittar_hjärnan))
         .merge(axum_extra::routing::SpaRouter::new(
             "/assets",
@@ -128,7 +129,7 @@ async fn producera_fantasiforster(
     }
 }
 
-async fn _skaffa_mig_era_fantasiforster(
+async fn skaffa_mig_era_fantasiforster(
     State(pool): State<ConnectionPool>,
     _claims: JwtDataHolder,
     result: Result<Json<FantasiforsterFilter>, JsonRejection>,

@@ -29,13 +29,14 @@ TwIDAQAB
     .unwrap()
 });
 
-pub trait HelperService {
-    fn get_storage(&self) -> Storage {
+pub struct HelperService {}
+impl HelperService {
+    pub fn get_storage() -> Storage {
         web_sys::window().unwrap().local_storage().unwrap().unwrap()
     }
 
-    fn get_jwt_information(&self) -> Option<JwtInformation> {
-        let storage = self.get_storage();
+    pub fn get_jwt_information() -> Option<JwtInformation> {
+        let storage = Self::get_storage();
         if let Ok(Some(token)) = storage.get_item("token") {
             if let Ok(token) = PUBLIC_KEY.verify_token(&token, None) {
                 Some(token.custom)

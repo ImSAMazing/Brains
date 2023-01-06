@@ -12,7 +12,6 @@ pub struct LogoutPage {}
 
 impl LogoutPage {}
 
-impl HelperService for LogoutPage {}
 impl Component for LogoutPage {
     type Message = Message;
     type Properties = LogoutPageProps;

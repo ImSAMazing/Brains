@@ -14,7 +14,6 @@ pub struct LoginPage {}
 
 impl LoginPage {}
 
-impl HelperService for LoginPage {}
 impl Component for LoginPage {
     type Message = Message;
     type Properties = LoginPageProps;

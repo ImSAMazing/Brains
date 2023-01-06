@@ -15,7 +15,6 @@ pub struct RegisterPage {}
 
 impl RegisterPage {}
 
-impl HelperService for RegisterPage {}
 impl Component for RegisterPage {
     type Message = Message;
     type Properties = RegisterPageProps;

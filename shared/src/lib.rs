@@ -27,7 +27,7 @@ impl FantasiforsterInformation {
         }
     }
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Fantasiforster {
     pub id: Uuid,
     pub titel: String,
