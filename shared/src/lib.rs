@@ -4,7 +4,7 @@ use serde::Deserialize;
 use serde::Serialize;
 type Uuid = String;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct FantasiforsterInformation {
     pub id: Uuid,
     pub titel: String,
@@ -53,7 +53,7 @@ impl Fantasiforster {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct FantasiforsterFilter {}
 
 impl FantasiforsterFilter {
@@ -61,7 +61,7 @@ impl FantasiforsterFilter {
         FantasiforsterFilter {}
     }
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ProduceraFantasiforsterFörfrågan {
     titel: String,
     innehåll: String,
@@ -75,7 +75,7 @@ impl ProduceraFantasiforsterFörfrågan {
         &self.innehåll
     }
 }
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct Hjärna {
     id: Uuid,
     hjärnannamn: String,
@@ -111,7 +111,7 @@ impl Hjärna {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct RegistreraHjärnaFörfrågan {
     hjärnannamn: String,
     lösenord: String,
@@ -147,7 +147,7 @@ impl RegistreraHjärnaFörfrågan {
     }
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Debug)]
 pub struct DemonstreraBesittarHjärnaFörfrågon {
     hjärnannamn: String,
     lösenord: String,
