@@ -1,4 +1,4 @@
-use yew::{classes, html, Component, Html, Properties};
+use yew::{html, Component, Html, Properties};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct ErrorProps {}

@@ -25,7 +25,7 @@ impl Component for LogoutPage {
 
     fn view(&self, ctx: &yew::Context<Self>) -> Html {
         let navigator = ctx.link().navigator().unwrap();
-        let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+        let local_storage = HelperService::get_storage();
         let target = if let Err(_) = local_storage.delete("token") {
             &Route::Home
         } else {

@@ -28,7 +28,7 @@ impl Component for LoginPage {
     fn view(&self, ctx: &yew::Context<Self>) -> Html {
         let navigator = ctx.link().navigator().unwrap();
         let on_login = Callback::from(move |value: String| {
-            let local_storage = web_sys::window().unwrap().local_storage().unwrap().unwrap();
+            let local_storage = HelperService::get_storage();
             if let Ok(()) = local_storage.set_item("token", &value) {
                 navigator.push(&Route::Home);
             }

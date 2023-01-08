@@ -2,10 +2,7 @@ use yew::{classes, html, Component, Html, Properties};
 
 use crate::HelperService;
 
-use super::{
-    nav_link_component::NavLinkComponent, nav_link_component::NavLinkProps,
-    user_info_component::UserInfoComponent,
-};
+use super::{nav_link_component::NavLinkComponent, user_info_component::UserInfoComponent};
 use crate::Route;
 use yew_router::prelude::Link;
 

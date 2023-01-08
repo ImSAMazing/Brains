@@ -1,14 +1,13 @@
 use gloo_net::http::Request;
 use shared::FantasiforsterInformation;
 use yew::{classes, html, Component, Html, Properties};
-use yew_router::scope_ext::RouterScopeExt;
 
 use crate::{
     components::{
         brainfarts::brainfart_component::BrainfartComponent,
         general::{error_component::ErrorComponent, loading_component::LoadingComponent},
     },
-    HelperService, Route,
+    HelperService,
 };
 
 #[derive(Properties, Clone, PartialEq)]
@@ -98,7 +97,7 @@ impl Component for BrainfartsView {
             html! {
                 <div>
                 if self.fantasiforster.len() > 0{
-                    <div class="flex items-center justify-center">
+                    <div class={classes!("flex","items-center","justify-center")}>
                     {forster}
                     </div>
                 }else{

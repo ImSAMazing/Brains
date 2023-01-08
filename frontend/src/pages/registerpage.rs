@@ -1,10 +1,7 @@
 use yew::{html, Callback, Component, Html, Properties};
 use yew_router::scope_ext::RouterScopeExt;
 
-use crate::{
-    components::authentication::register_form_component::RegisterFormComponent, HelperService,
-    Route,
-};
+use crate::{components::authentication::register_form_component::RegisterFormComponent, Route};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct RegisterPageProps {}

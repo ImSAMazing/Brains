@@ -1,14 +1,8 @@
-use gloo_net::http::Request;
-use log::debug;
-use shared::{Fantasiforster, FantasiforsterInformation};
-use yew::{classes, html, Component, Html, Properties};
+use yew::{html, Component, Html, Properties};
 use yew_router::scope_ext::RouterScopeExt;
 
 use crate::{
-    components::{
-        brainfarts::brainfart_component::BrainfartComponent,
-        general::{loading_component::LoadingComponent, navbar_component::NavbarComponent},
-    },
+    components::general::{loading_component::LoadingComponent, navbar_component::NavbarComponent},
     views::brainfarts_view::BrainfartsView,
     HelperService, Route,
 };
@@ -25,7 +19,7 @@ impl HomePage {}
 impl Component for HomePage {
     type Message = Message;
     type Properties = HomePageProps;
-    fn create(ctx: &yew::Context<Self>) -> Self {
+    fn create(_ctx: &yew::Context<Self>) -> Self {
         Self {}
     }
 

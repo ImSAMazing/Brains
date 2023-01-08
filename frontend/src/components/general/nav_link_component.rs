@@ -23,7 +23,7 @@ impl Component for NavLinkComponent {
     type Message = Message;
     type Properties = NavLinkProps;
 
-    fn create(ctx: &yew::Context<Self>) -> Self {
+    fn create(_ctx: &yew::Context<Self>) -> Self {
         Self {}
     }
 
