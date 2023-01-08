@@ -121,7 +121,7 @@ impl Component for HomePage {
                 <NavbarComponent/>
                 <div>
                 if self.fantasiforster.len() > 0{
-                    <div class="flex items-center">
+                    <div class="flex items-center justify-center">
                     {forster}
                     </div>
                 }else{
