@@ -14,7 +14,6 @@ pub struct AfterApiAction {
 }
 pub enum Message {
     Submit,
-    DoNothing,
     AfterCreation,
     SetField,
     AfterApiResponse(AfterApiAction),
@@ -109,7 +108,6 @@ impl Component for NewBrainfartComponent {
                     .set_value("");
                 true
             }
-            Message::DoNothing => false,
             Message::Submit => {
                 self.is_busy = true;
                 self.show_warning = false;

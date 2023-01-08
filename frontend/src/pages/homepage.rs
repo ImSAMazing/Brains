@@ -17,7 +17,9 @@ pub enum Message {
     ReRender,
 }
 
-pub struct HomePage {}
+pub struct HomePage {
+    counter: u8,
+}
 
 impl HomePage {}
 
@@ -25,18 +27,21 @@ impl Component for HomePage {
     type Message = Message;
     type Properties = HomePageProps;
     fn create(_ctx: &yew::Context<Self>) -> Self {
-        Self {}
+        Self { counter: 0 }
     }
 
     fn update(&mut self, _ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Message::ReRender => true,
+            Message::ReRender => {
+                self.counter += 1;
+                true
+            }
         }
     }
 
     fn view(&self, ctx: &yew::Context<Self>) -> Html {
         let navigator = ctx.link().navigator().unwrap();
-        let on_new_brainfart = ctx.link().callback(move |s: String| Message::ReRender);
+        let on_new_brainfart = ctx.link().callback(move |_s: String| Message::ReRender);
         if let Some(_) = HelperService::get_jwt_information() {
             html! {
             <div>
@@ -45,7 +50,7 @@ impl Component for HomePage {
                 <NewBrainfartComponent on_creation={on_new_brainfart}/>
                 </div>
                 <div>
-                <BrainfartsView/>
+                <BrainfartsView counter={self.counter}/>
                 </div>
 
             </div> }

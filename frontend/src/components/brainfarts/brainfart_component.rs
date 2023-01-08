@@ -27,7 +27,7 @@ impl Component for BrainfartComponent {
         let forster = &ctx.props().forster;
         let dag = forster.födelsedag.format("%Y/%m/%d %H:%M").to_string();
         html! {
-            <div key={forster.id.to_string()} class={classes!("block", "xl:w-2/5", "md:w-2/3", "sm:w-4/5", "xs:w-full", "border", "p-6", "border-gray-300", "rounded-lg", "shadow-md", "bg-gray-100")}>
+            <div key={forster.id.to_string()} class={classes!("block", "xl:w-2/5", "md:w-2/3", "sm:w-4/5", "xs:w-full", "border", "p-6", "border-gray-300", "rounded-lg", "shadow-md", "bg-gray-100", "mt-2")}>
                 <h1 class={classes!("mb-2", "font-bold", "tracking-tight", "text-center")}>
                 {&forster.titel}
                 </h1>

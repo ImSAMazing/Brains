@@ -11,7 +11,9 @@ use crate::{
 };
 
 #[derive(Properties, Clone, PartialEq)]
-pub struct BrainfartsProps {}
+pub struct BrainfartsProps {
+    pub counter: u8,
+}
 
 pub enum Message {
     None,
@@ -76,6 +78,7 @@ impl Component for BrainfartsView {
     }
 
     fn view(&self, _ctx: &yew::Context<Self>) -> Html {
+        log::debug!("Viewed called");
         if let Some(_) = HelperService::get_jwt_information() {
             let forster = self
                 .fantasiforster
@@ -87,7 +90,7 @@ impl Component for BrainfartsView {
             html! {
                 <div>
                 if self.fantasiforster.len() > 0{
-                    <div class={classes!("flex","items-center","justify-center")}>
+                    <div class={classes!("flex","items-center","justify-between","flex-col")}>
                     {forster}
                     </div>
                 }else{
@@ -98,5 +101,11 @@ impl Component for BrainfartsView {
         } else {
             html! {<ErrorComponent/>}
         }
+    }
+
+    fn changed(&mut self, ctx: &yew::Context<Self>, _old_props: &Self::Properties) -> bool {
+        log::debug!("Changed");
+        Self::get_brainfarts(ctx);
+        true
     }
 }
