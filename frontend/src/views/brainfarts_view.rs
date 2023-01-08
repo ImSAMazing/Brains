@@ -25,17 +25,7 @@ pub struct BrainfartsView {
 impl BrainfartsView {
     fn get_brainfarts(ctx: &yew::Context<Self>) {
         ctx.link().send_future(async move {
-            let resp = Request::get("/api/getbrainfarts")
-                .header(
-                    "Authorization",
-                    &format!(
-                        "Bearer {}",
-                        HelperService::get_storage()
-                            .get_item("token")
-                            .unwrap()
-                            .unwrap()
-                    ),
-                )
+            let resp = HelperService::add_authorization_header(Request::get("/api/getbrainfarts"))
                 .send()
                 .await
                 .unwrap();

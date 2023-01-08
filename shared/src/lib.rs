@@ -67,7 +67,7 @@ impl FantasiforsterFilter {
         FantasiforsterFilter {}
     }
 }
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ProduceraFantasiforsterFörfrågan {
     titel: String,
     innehåll: String,
@@ -79,6 +79,14 @@ impl ProduceraFantasiforsterFörfrågan {
     }
     pub fn skaffa_mig_ditt_innehåll(&self) -> &str {
         &self.innehåll
+    }
+
+    pub fn validera(titel: &str, innehall: &str) -> bool {
+        !titel.is_empty() && !innehall.is_empty()
+    }
+
+    pub fn producera(titel: String, innehåll: String) -> ProduceraFantasiforsterFörfrågan {
+        ProduceraFantasiforsterFörfrågan { titel, innehåll }
     }
 }
 #[derive(Deserialize, Serialize, Debug)]

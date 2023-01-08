@@ -36,6 +36,18 @@ impl HelperService {
         web_sys::window().unwrap().local_storage().unwrap().unwrap()
     }
 
+    pub fn add_authorization_header(request: Request) -> Request {
+        request.header(
+            "Authorization",
+            &format!(
+                "Bearer {}",
+                HelperService::get_storage()
+                    .get_item("token")
+                    .unwrap()
+                    .unwrap()
+            ),
+        )
+    }
     pub fn get_jwt_information() -> Option<JwtInformation> {
         let storage = Self::get_storage();
         if let Ok(Some(token)) = storage.get_item("token") {

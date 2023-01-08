@@ -162,7 +162,17 @@ impl Component for LoginFormComponent {
         });
 
         let on_click = ctx.link().callback(move |_e: MouseEvent| Message::Submit);
-
+        let input_classes = classes!(
+            "w-full",
+            "px-4",
+            "py-2",
+            "mt-2",
+            "border",
+            "rounded-md",
+            "focus:outline-none",
+            "focus:ring-1",
+            "focus:ring-blue-600"
+        );
         html! {
         <div class="flex items-center justify-center min-h-screen bg-gray-100">
             <div class="px-8 py-6 mt-4 text-left bg-white shadow-lg">
@@ -172,17 +182,17 @@ impl Component for LoginFormComponent {
                 </div>
                 <div class="mt-4">
                     <div>
-                        <label class="block" for="namn">{"Namn"}</label>
+                        <label class={classes!("block")} for="namn">{"Namn"}</label>
                         <input ref={self.namn_ref.clone()} id="namn" type="text" placeholder={"Namn"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
-                            class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
+                            class={input_classes.clone()}/>
                     </div>
                     <div class="mt-4">
-                        <label class="block">{"Lösenord"}</label>
+                        <label class={classes!("block")}>{"Lösenord"}</label>
                         <input ref={self.lösenord_ref.clone()} type="password" placeholder={"Password"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
-                            class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
+                            class={input_classes}/>
                     </div>
                     <div class="flex items-baseline justify-between">
-                        <button disabled={!self.button_is_enabled()} onclick={on_click} class={self.get_classes()}>{"Login"}</button>
+                        <button disabled={!button_is_enabled} onclick={on_click} class={self.get_classes()}>{"Login"}</button>
                         <Link<Route> to={Route::Register} classes={classes!("text-sm", "text-blue-600", "hover:underline")}>{"Don't have an account?"}</Link<Route>>
                     </div>
                 </div>
