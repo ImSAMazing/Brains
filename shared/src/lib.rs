@@ -4,13 +4,19 @@ use serde::Deserialize;
 use serde::Serialize;
 type Uuid = String;
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct FantasiforsterInformation {
     pub id: Uuid,
     pub titel: String,
     pub innehåll: String,
     pub födelsedag: DateTime<Local>,
     pub uppfinnare_namn: String,
+}
+
+impl PartialEq for FantasiforsterInformation {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
 }
 
 impl FantasiforsterInformation {

@@ -12,6 +12,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 mod components;
 mod pages;
+mod views;
 
 static PUBLIC_KEY: Lazy<RS384PublicKey> = Lazy::new(|| {
     RS384PublicKey::from_pem(
@@ -99,7 +100,7 @@ fn hello_server() -> Html {
 }
 
 #[derive(Clone, Routable, PartialEq)]
-enum Route {
+pub enum Route {
     #[at("/")]
     Home,
     #[at("/login")]
