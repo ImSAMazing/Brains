@@ -1,4 +1,4 @@
-use yew::{html, Component, Html, Properties};
+use yew::{classes, html, Component, Html, Properties};
 use yew_router::scope_ext::RouterScopeExt;
 
 use crate::{
@@ -6,7 +6,7 @@ use crate::{
         brainfarts::new_brainfart_component::NewBrainfartComponent,
         general::{loading_component::LoadingComponent, navbar_component::NavbarComponent},
     },
-    views::brainfarts_view::BrainfartsView,
+    views::{brainfarts_view::BrainfartsView, new_brainfart_view::NewBrainfartView},
     HelperService, Route,
 };
 
@@ -47,7 +47,7 @@ impl Component for HomePage {
             <div>
                 <NavbarComponent/>
                 <div>
-                <NewBrainfartComponent on_creation={on_new_brainfart}/>
+                <NewBrainfartView on_new_brainfart={on_new_brainfart}/>
                 </div>
                 <div>
                 <BrainfartsView counter={self.counter}/>
