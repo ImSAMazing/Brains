@@ -1,11 +1,8 @@
-use yew::{classes, html, Component, Html, Properties};
+use yew::{html, Component, Html, Properties};
 use yew_router::scope_ext::RouterScopeExt;
 
 use crate::{
-    components::{
-        brainfarts::new_brainfart_component::NewBrainfartComponent,
-        general::{loading_component::LoadingComponent, navbar_component::NavbarComponent},
-    },
+    components::general::{loading_component::LoadingComponent, navbar_component::NavbarComponent},
     views::{brainfarts_view::BrainfartsView, new_brainfart_view::NewBrainfartView},
     HelperService, Route,
 };

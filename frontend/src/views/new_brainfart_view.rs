@@ -61,7 +61,7 @@ impl Component for NewBrainfartView {
         }
         html! {
             <div>
-                <div class={classes!("sticky", "fixed", "top-0", "left-0")}>
+                <div class={classes!("fixed", "top-1/3", "left-1")}>
                     <button onclick={on_click}
                     class={classes!("block","text-white","bg-blue-700","hover:bg-blue-800","focus:ring-4","focus:outline-none","focus:ring-blue-300","font-medium","rounded-lg","text-sm","px-5","py-2.5","text-center")}
                     >{"Feel a fart?"}</button>
