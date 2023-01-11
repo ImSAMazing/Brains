@@ -10,10 +10,11 @@ pub struct NewBrainfartViewProps {
 
 pub enum Message {
     TriggerModal,
+    CloseModal,
 }
 
 pub struct NewBrainfartView {
-    trigger_modal_next_view: bool,
+    show_modal: bool,
 }
 
 impl NewBrainfartView {}
@@ -22,15 +23,17 @@ impl Component for NewBrainfartView {
     type Message = Message;
     type Properties = NewBrainfartViewProps;
     fn create(_ctx: &yew::Context<Self>) -> Self {
-        Self {
-            trigger_modal_next_view: false,
-        }
+        Self { show_modal: false }
     }
 
     fn update(&mut self, _ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Message::TriggerModal => {
-                self.trigger_modal_next_view = true;
+                self.show_modal = true;
+                true
+            }
+            Message::CloseModal => {
+                self.show_modal = false;
                 true
             }
         }
@@ -40,13 +43,15 @@ impl Component for NewBrainfartView {
         let on_click = ctx
             .link()
             .callback(move |_e: MouseEvent| Message::TriggerModal);
+        let on_close = ctx
+            .link()
+            .callback(move |_e: MouseEvent| Message::CloseModal);
         let on_new_brainfart = ctx.props().clone().on_new_brainfart;
 
         let mut base_modal_classes = classes!(
             "fixed",
-            "top-0",
-            "left-0",
-            "right-0",
+            "grid",
+            "place-items-center",
             "z-50",
             "w-full",
             "p-4",
@@ -54,9 +59,12 @@ impl Component for NewBrainfartView {
             "overflow-y-auto",
             "md:inset-0",
             "h-modal",
-            "md:h-full"
+            "w-modal",
+            "md:h-full",
+            "align-center",
+            "justify-center"
         );
-        if !self.trigger_modal_next_view {
+        if !self.show_modal {
             base_modal_classes.push("hidden");
         }
         html! {
@@ -67,7 +75,7 @@ impl Component for NewBrainfartView {
                     >{"Feel a fart?"}</button>
                 </div>
                 <div tabindex="-1" aria-hidden="true" class={base_modal_classes}>
-                    <NewBrainfartComponent on_creation={on_new_brainfart}/>
+                    <NewBrainfartComponent on_creation={on_new_brainfart} on_close={on_close}/>
                 </div>
             </div>
         }
