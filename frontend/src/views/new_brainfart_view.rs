@@ -67,6 +67,8 @@ impl Component for NewBrainfartView {
         if !self.show_modal {
             base_modal_classes.push("hidden");
         }
+        let inner_modal_classes =
+            classes!("relative", "w-full", "h-full", "max-w-2xl", "md:h-auto");
         html! {
             <div>
                 <div class={classes!("fixed", "top-1/3", "left-1")}>
@@ -75,8 +77,11 @@ impl Component for NewBrainfartView {
                     >{"Feel a fart?"}</button>
                 </div>
                 <div tabindex="-1" aria-hidden="true" class={base_modal_classes}>
-                    <NewBrainfartComponent on_creation={on_new_brainfart} on_close={on_close}/>
+                    <div class={inner_modal_classes}>
+                        <NewBrainfartComponent on_creation={on_new_brainfart} on_close={on_close}/>
+                    </div>
                 </div>
+
             </div>
         }
     }

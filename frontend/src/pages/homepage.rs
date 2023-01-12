@@ -50,6 +50,7 @@ impl Component for HomePage {
                 <BrainfartsView counter={self.counter}/>
                 </div>
 
+
             </div> }
         } else {
             navigator.push(&Route::Login);
