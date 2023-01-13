@@ -46,7 +46,11 @@ impl Component for NewBrainfartView {
         let on_close = ctx
             .link()
             .callback(move |_e: MouseEvent| Message::CloseModal);
-        let on_new_brainfart = ctx.props().clone().on_new_brainfart;
+        let prop_brainfart = ctx.props().clone().on_new_brainfart;
+        let on_new_brainfart = ctx.link().callback(move |s: String| {
+            prop_brainfart.emit(s);
+            Message::CloseModal
+        });
 
         let mut base_modal_classes = classes!(
             "fixed",
@@ -64,18 +68,48 @@ impl Component for NewBrainfartView {
             "align-center",
             "justify-center"
         );
+
+        let mut gray_overlay_classes = classes!(
+            "fixed",
+            "inset-0",
+            "bg-gray-600",
+            "bg-opacity-50",
+            "overflow-y-auto",
+            "h-full",
+            "w-full"
+        );
+
+        let mut new_brainfart_button_classes = classes!(
+            "block",
+            "text-white",
+            "bg-blue-700",
+            "hover:bg-blue-800",
+            "focus:ring-4",
+            "focus:outline-none",
+            "focus:ring-blue-300",
+            "font-medium",
+            "rounded-lg",
+            "text-sm",
+            "px-5",
+            "py-2.5",
+            "text-center"
+        );
+
         if !self.show_modal {
             base_modal_classes.push("hidden");
+            gray_overlay_classes.push("hidden");
+        } else {
+            new_brainfart_button_classes.push("hidden");
         }
         let inner_modal_classes =
             classes!("relative", "w-full", "h-full", "max-w-2xl", "md:h-auto");
         html! {
             <div>
-                <div class={classes!("fixed", "top-1/3", "left-1")}>
-                    <button onclick={on_click}
-                    class={classes!("block","text-white","bg-blue-700","hover:bg-blue-800","focus:ring-4","focus:outline-none","focus:ring-blue-300","font-medium","rounded-lg","text-sm","px-5","py-2.5","text-center")}
+                <div class={classes!("fixed", "bottom-1", "right-1")}>
+                    <button onclick={on_click} class={new_brainfart_button_classes}
                     >{"Feel a fart?"}</button>
                 </div>
+                <div class={gray_overlay_classes}></div>
                 <div tabindex="-1" aria-hidden="true" class={base_modal_classes}>
                     <div class={inner_modal_classes}>
                         <NewBrainfartComponent on_creation={on_new_brainfart} on_close={on_close}/>
