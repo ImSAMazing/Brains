@@ -567,10 +567,6 @@ video {
   position: fixed;
 }
 
-.relative {
-  position: relative;
-}
-
 .inset-0 {
   top: 0px;
   right: 0px;
@@ -689,10 +685,6 @@ video {
 
 .w-6 {
   width: 1.5rem;
-}
-
-.max-w-2xl {
-  max-width: 42rem;
 }
 
 @keyframes spin {
@@ -1190,10 +1182,6 @@ video {
 
   .md\:h-full {
     height: 100%;
-  }
-
-  .md\:h-auto {
-    height: auto;
   }
 
   .md\:w-2\/3 {

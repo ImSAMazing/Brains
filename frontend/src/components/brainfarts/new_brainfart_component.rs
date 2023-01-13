@@ -170,7 +170,7 @@ impl Component for NewBrainfartComponent {
         );
         html! {
             <div class={classes!("block", "border", "w-full", "p-6", "border-gray-300", "rounded-lg", "shadow-md", "bg-gray-400")}>
-                <button onclick={on_close} class={classes!("float-right","block","text-white","bg-blue-700","hover:bg-blue-800","focus:ring-4","focus:outline-none","focus:ring-blue-300","font-medium","rounded-lg","text-sm","px-5","py-2.5","text-center")}>{"Close"}</button>
+                <button onclick={on_close} class={classes!("float-right","block","text-white","bg-blue-700","hover:bg-blue-800","focus:ring-4","focus:outline-none","focus:ring-blue-300","font-medium","rounded-lg","text-sm","px-5","py-2.5","text-center")}>{"Cancel"}</button>
                 <h1 class={classes!("text-xl","mb-2", "font-bold", "tracking-tight", "text-center")}>
                 {"New brainfart?"}
                 </h1>

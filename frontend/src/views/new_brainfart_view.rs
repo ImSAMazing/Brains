@@ -66,7 +66,7 @@ impl Component for NewBrainfartView {
             "w-modal",
             "md:h-full",
             "align-center",
-            "justify-center"
+            "justify-center",
         );
 
         let mut gray_overlay_classes = classes!(
@@ -101,8 +101,6 @@ impl Component for NewBrainfartView {
         } else {
             new_brainfart_button_classes.push("hidden");
         }
-        let inner_modal_classes =
-            classes!("relative", "w-full", "h-full", "max-w-2xl", "md:h-auto");
         html! {
             <div>
                 <div class={classes!("fixed", "bottom-1", "right-1")}>
@@ -110,10 +108,8 @@ impl Component for NewBrainfartView {
                     >{"Feel a fart?"}</button>
                 </div>
                 <div class={gray_overlay_classes}></div>
-                <div tabindex="-1" aria-hidden="true" class={base_modal_classes}>
-                    <div class={inner_modal_classes}>
-                        <NewBrainfartComponent on_creation={on_new_brainfart} on_close={on_close}/>
-                    </div>
+                <div tabindex="-1" class={base_modal_classes}>
+                    <NewBrainfartComponent on_creation={on_new_brainfart} on_close={on_close}/>
                 </div>
 
             </div>
