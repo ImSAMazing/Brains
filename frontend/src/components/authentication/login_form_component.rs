@@ -1,5 +1,5 @@
 use gloo_net::http::Request;
-use shared::DemonstreraBesittarHjärnaFörfrågon;
+use shared::ProveOwnsBrainRequest;
 use web_sys::HtmlInputElement;
 use web_sys::KeyboardEvent;
 use yew::classes;
@@ -28,8 +28,8 @@ pub enum Message {
 }
 
 pub struct LoginFormComponent {
-    namn_ref: NodeRef,
-    lösenord_ref: NodeRef,
+    name_ref: NodeRef,
+    password_ref: NodeRef,
     error_text: String,
     button_disabled: bool,
     show_warning: bool,
@@ -66,23 +66,22 @@ impl LoginFormComponent {
     fn update_button_status(&mut self) -> bool {
         let fields = self.get_input_fields_content();
 
-        let should_be_disabled =
-            if DemonstreraBesittarHjärnaFörfrågon::validera(&fields.0, &fields.1) {
-                false
-            } else {
-                true
-            };
+        let should_be_disabled = if ProveOwnsBrainRequest::validate(&fields.0, &fields.1) {
+            false
+        } else {
+            true
+        };
         let will_value_change = should_be_disabled != self.button_disabled;
         self.button_disabled = should_be_disabled;
         will_value_change
     }
 
     fn get_input_fields_content(&self) -> (String, String) {
-        let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
-        let namn = namn_element.value();
-        let lösenord_element = self.lösenord_ref.cast::<HtmlInputElement>().unwrap();
-        let lösenord = lösenord_element.value();
-        (namn, lösenord)
+        let name_element = self.name_ref.cast::<HtmlInputElement>().unwrap();
+        let name = name_element.value();
+        let password_element = self.password_ref.cast::<HtmlInputElement>().unwrap();
+        let password = password_element.value();
+        (name, password)
     }
 }
 
@@ -91,8 +90,8 @@ impl Component for LoginFormComponent {
     type Properties = LoginFormProps;
     fn create(_ctx: &yew::Context<Self>) -> Self {
         Self {
-            namn_ref: NodeRef::default(),
-            lösenord_ref: NodeRef::default(),
+            name_ref: NodeRef::default(),
+            password_ref: NodeRef::default(),
             error_text: String::default(),
             button_disabled: true,
             show_warning: false,
@@ -112,9 +111,7 @@ impl Component for LoginFormComponent {
 
                 ctx.link().send_future(async move {
                     let resp = Request::post("/api/loginasbrain")
-                        .json(&DemonstreraBesittarHjärnaFörfrågon::producera(
-                            fields.0, fields.1,
-                        ))
+                        .json(&ProveOwnsBrainRequest::create(fields.0, fields.1))
                         .unwrap()
                         .send()
                         .await
@@ -182,13 +179,13 @@ impl Component for LoginFormComponent {
                 </div>
                 <div class="mt-4">
                     <div>
-                        <label class={classes!("block")} for="namn">{"Namn"}</label>
-                        <input ref={self.namn_ref.clone()} id="namn" type="text" placeholder={"Namn"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
+                        <label class={classes!("block")} for="name">{"Namn"}</label>
+                        <input ref={self.name_ref.clone()} id="name" type="text" placeholder={"Namn"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
                             class={input_classes.clone()}/>
                     </div>
                     <div class="mt-4">
                         <label class={classes!("block")}>{"Lösenord"}</label>
-                        <input ref={self.lösenord_ref.clone()} type="password" placeholder={"Password"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
+                        <input ref={self.password_ref.clone()} type="password" placeholder={"Password"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
                             class={input_classes}/>
                     </div>
                     <div class="flex items-baseline justify-between">

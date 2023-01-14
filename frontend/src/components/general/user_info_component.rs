@@ -25,7 +25,7 @@ impl Component for UserInfoComponent {
     fn view(&self, _ctx: &yew::Context<Self>) -> Html {
         html! {
         <div class="flex justify-center items-center">
-            <h1>{format!("Välkommen till Hjärnor, {}",HelperService::get_jwt_information().unwrap().hjärnannamn)}</h1>
+            <h1>{format!("Welcome to Brains, {}",HelperService::get_jwt_information().unwrap().brainname)}</h1>
         </div>
         }
     }

@@ -1,5 +1,5 @@
 use gloo_net::http::Request;
-use shared::RegistreraHjärnaFörfrågan;
+use shared::RegisterBrainRequest;
 use web_sys::HtmlInputElement;
 use web_sys::KeyboardEvent;
 use yew::classes;
@@ -29,9 +29,9 @@ pub enum Message {
 }
 
 pub struct RegisterFormComponent {
-    namn_ref: NodeRef,
-    lösenord_ref: NodeRef,
-    lösenord_extra_ref: NodeRef,
+    name_ref: NodeRef,
+    password_ref: NodeRef,
+    password_extra_ref: NodeRef,
     error_text: String,
     button_disabled: bool,
     show_warning: bool,
@@ -69,25 +69,25 @@ impl RegisterFormComponent {
     fn update_button_status(&mut self) -> bool {
         let fields = self.get_input_fields_content();
 
-        let should_be_disabled =
-            if RegistreraHjärnaFörfrågan::validera(&fields.0, &fields.1, &fields.2) {
-                false
-            } else {
-                true
-            };
+        let should_be_disabled = if RegisterBrainRequest::validate(&fields.0, &fields.1, &fields.2)
+        {
+            false
+        } else {
+            true
+        };
         let will_value_change = should_be_disabled != self.button_disabled;
         self.button_disabled = should_be_disabled;
         will_value_change
     }
 
     fn get_input_fields_content(&self) -> (String, String, String) {
-        let namn_element = self.namn_ref.cast::<HtmlInputElement>().unwrap();
-        let namn = namn_element.value();
-        let lösenord_element = self.lösenord_ref.cast::<HtmlInputElement>().unwrap();
-        let lösenord = lösenord_element.value();
-        let lösenord_extra_element = self.lösenord_extra_ref.cast::<HtmlInputElement>().unwrap();
-        let lösenord_extra = lösenord_extra_element.value();
-        (namn, lösenord, lösenord_extra)
+        let name_element = self.name_ref.cast::<HtmlInputElement>().unwrap();
+        let name = name_element.value();
+        let password_element = self.password_ref.cast::<HtmlInputElement>().unwrap();
+        let password = password_element.value();
+        let password_extra_element = self.password_extra_ref.cast::<HtmlInputElement>().unwrap();
+        let password_extra = password_extra_element.value();
+        (name, password, password_extra)
     }
 }
 
@@ -96,9 +96,9 @@ impl Component for RegisterFormComponent {
     type Properties = RegisterFormProps;
     fn create(_ctx: &yew::Context<Self>) -> Self {
         Self {
-            namn_ref: NodeRef::default(),
-            lösenord_ref: NodeRef::default(),
-            lösenord_extra_ref: NodeRef::default(),
+            name_ref: NodeRef::default(),
+            password_ref: NodeRef::default(),
+            password_extra_ref: NodeRef::default(),
             error_text: String::default(),
             button_disabled: true,
             show_warning: false,
@@ -116,9 +116,7 @@ impl Component for RegisterFormComponent {
                 let on_succesfull_registration = ctx.props().clone().on_succesfull_registration;
                 ctx.link().send_future(async move {
                     let resp = Request::post("/api/registerbrain")
-                        .json(&RegistreraHjärnaFörfrågan::producera(
-                            fields.0, fields.1, fields.2,
-                        ))
+                        .json(&RegisterBrainRequest::create(fields.0, fields.1, fields.2))
                         .unwrap()
                         .send()
                         .await
@@ -173,18 +171,18 @@ impl Component for RegisterFormComponent {
                 </div>
                 <div class="mt-4">
                     <div>
-                        <label class="block">{"Namn"}</label>
-                        <input ref={self.namn_ref.clone()} type="text" placeholder={"Namn"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
+                        <label class="block">{"Name"}</label>
+                        <input ref={self.name_ref.clone()} type="text" placeholder={"Name"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="mt-4">
-                        <label class="block">{"Lösenord"}</label>
-                        <input ref={self.lösenord_ref.clone()} type="password" placeholder={"Lösenord"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
+                        <label class="block">{"Password"}</label>
+                        <input ref={self.password_ref.clone()} type="password" placeholder={"Password"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="mt-4">
-                        <label class="block">{"Lösenord Extra"}</label>
-                        <input ref={self.lösenord_extra_ref.clone()} type="password" placeholder={"Lösenord"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
+                        <label class="block">{"Repeat password"}</label>
+                        <input ref={self.password_extra_ref.clone()} type="password" placeholder={"Password"} onkeydown={on_enter.clone()} oninput={on_input.clone()}
                             class="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"/>
                     </div>
                     <div class="flex items-baseline justify-between">

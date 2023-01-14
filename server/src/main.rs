@@ -1,4 +1,4 @@
-use autentisering::{producera_jwt, JwtDataHolder};
+use authentication::{create_jwt, JwtDataHolder};
 use axum::{
     extract::{rejection::JsonRejection, State},
     http::StatusCode,
@@ -7,13 +7,13 @@ use axum::{
     Json, Router,
 };
 use clap::Parser;
-use databank::{
-    create_models::ProduceraFrånFörfrågan, losenord_verifiera::verifiera_lösenord, skaffa_models,
+use database::{
+    create_models::CreateFromRequest, get_models, password_verification::verify_password,
 };
 use jwt_simple::prelude::ES384KeyPair;
 use shared::{
-    DemonstreraBesittarHjärnaFörfrågon, Fantasiforster, FantasiforsterFilter, Hjärna,
-    ProduceraFantasiforsterFörfrågan, RegistreraHjärnaFörfrågan,
+    Brain, Brainfart, BrainfartFilter, CreateBrainfartRequest, ProveOwnsBrainRequest,
+    RegisterBrainRequest,
 };
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
@@ -25,8 +25,8 @@ use sqlx::{postgres::PgPoolOptions, types::Uuid, Pool, Postgres};
 
 use dotenv::dotenv;
 
-mod autentisering;
-mod databank;
+mod authentication;
+mod database;
 mod error_responders;
 
 type ConnectionPool = Pool<Postgres>;
@@ -72,10 +72,10 @@ async fn main() {
 
     let app = Router::new()
         .route("/api/hello", get(hello))
-        .route("/api/createbrainfart", post(producera_fantasiforster))
-        .route("/api/registerbrain", post(registrera_hjärna))
-        .route("/api/getbrainfarts", get(skaffa_mig_era_fantasiforster))
-        .route("/api/loginasbrain", post(demonstrera_jag_besittar_hjärnan))
+        .route("/api/createbrainfart", post(create_brainfarts))
+        .route("/api/registerbrain", post(register_brain))
+        .route("/api/getbrainfarts", get(get_some_brainfarts))
+        .route("/api/loginasbrain", post(show_i_own_brain))
         .merge(axum_extra::routing::SpaRouter::new(
             "/assets",
             opt.static_dir,
@@ -105,67 +105,65 @@ async fn hello() -> impl IntoResponse {
     )
 }
 
-async fn producera_fantasiforster(
+async fn create_brainfarts(
     State(pool): State<ConnectionPool>,
     claims: JwtDataHolder,
-    result: Result<Json<ProduceraFantasiforsterFörfrågan>, JsonRejection>,
+    result: Result<Json<CreateBrainfartRequest>, JsonRejection>,
 ) -> impl IntoResponse {
     let jwt_information = claims.information;
-    let uppfinnare_id = Uuid::parse_str(&jwt_information.id).unwrap();
+    let mastermind_id = Uuid::parse_str(&jwt_information.id).unwrap();
     match result {
-        Ok(Json(payload)) => match payload.producera(pool, uppfinnare_id).await {
-            Some(reaktion) => {
-                let forster = Fantasiforster::producera(
-                    reaktion.uuid.to_string(),
+        Ok(Json(payload)) => match payload.create(pool, mastermind_id).await {
+            Some(response) => {
+                let forster = Brainfart::create(
+                    response.uuid.to_string(),
                     payload,
-                    uppfinnare_id.to_string(),
-                    reaktion.födelsedag,
+                    mastermind_id.to_string(),
+                    response.birthdate,
                 );
                 Ok((StatusCode::CREATED, Json(forster)))
             }
-            None => Err((StatusCode::INTERNAL_SERVER_ERROR, "Producera ".to_string())),
+            None => Err((StatusCode::INTERNAL_SERVER_ERROR, "Create ".to_string())),
         },
         Err(err) => Err(error_responders::post_error_responder(err)),
     }
 }
 
-async fn skaffa_mig_era_fantasiforster(
+async fn get_some_brainfarts(
     State(pool): State<ConnectionPool>,
     _claims: JwtDataHolder,
-    result: Result<Json<FantasiforsterFilter>, JsonRejection>,
+    result: Result<Json<BrainfartFilter>, JsonRejection>,
 ) -> impl IntoResponse {
     let filter = if let Ok(Json(payload)) = result {
         payload
     } else {
-        FantasiforsterFilter::default()
+        BrainfartFilter::default()
     };
-    if let Some(fantasiforster) =
-        skaffa_models::_skaffa_mig_fantasiforster_från_filter(pool, filter).await
-    {
-        Ok((StatusCode::OK, Json(fantasiforster)))
+    if let Some(brainfarts) = get_models::_get_brainfarts_från_filter(pool, filter).await {
+        Ok((StatusCode::OK, Json(brainfarts)))
     } else {
         Err((StatusCode::NOT_FOUND, "Error".to_string()))
     }
 }
 
-async fn registrera_hjärna(
+async fn register_brain(
     State(pool): State<ConnectionPool>,
-    result: Result<Json<RegistreraHjärnaFörfrågan>, JsonRejection>,
+    result: Result<Json<RegisterBrainRequest>, JsonRejection>,
 ) -> impl IntoResponse {
     match result {
-        Ok(Json(payload)) => match payload.producera(pool, Uuid::nil()).await {
-            Some(reaktion) => {
-                let hjärna = Hjärna::registrera(
-                    reaktion.uuid.to_string(),
+        Ok(Json(payload)) => match payload.create(pool, Uuid::nil()).await {
+            Some(response) => {
+                let brain = Brain::register(
+                    response.uuid.to_string(),
                     payload,
-                    reaktion.födelsedag,
-                    reaktion.tillägen_information.unwrap(),
+                    response.birthdate,
+                    response.extra_information.unwrap(),
                 );
                 Ok((
                     StatusCode::CREATED,
-                    Json(producera_jwt(
-                        Uuid::parse_str(hjärna.skaffa_mig_ditt_id()).unwrap(),
-                        hjärna.skaffa_mig_ditt_namn().to_string(),
+                    Json(create_jwt(
+                        Uuid::parse_str(brain.get_id()).unwrap(),
+                        brain.get_name().to_string(),
                     )),
                 ))
             }
@@ -178,14 +176,14 @@ async fn registrera_hjärna(
     }
 }
 
-async fn demonstrera_jag_besittar_hjärnan(
+async fn show_i_own_brain(
     State(pool): State<ConnectionPool>,
-    result: Result<Json<DemonstreraBesittarHjärnaFörfrågon>, JsonRejection>,
+    result: Result<Json<ProveOwnsBrainRequest>, JsonRejection>,
 ) -> impl IntoResponse {
     match result {
         Ok(Json(result)) => {
-            if let Some(id) = verifiera_lösenord(pool, &result).await {
-                let token = producera_jwt(id, (&result.skaffa_mig_ditt_namn()).to_string());
+            if let Some(id) = verify_password(pool, &result).await {
+                let token = create_jwt(id, (&result.get_name()).to_string());
                 Ok((StatusCode::ACCEPTED, Json(token)))
             } else {
                 Ok((StatusCode::UNAUTHORIZED, Json("Unknown brain!".to_string())))

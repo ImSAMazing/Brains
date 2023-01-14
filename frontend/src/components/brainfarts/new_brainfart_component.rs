@@ -1,5 +1,5 @@
 use gloo_net::http::Request;
-use shared::ProduceraFantasiforsterFörfrågan;
+use shared::CreateBrainfartRequest;
 use web_sys::{HtmlInputElement, InputEvent, MouseEvent};
 use yew::{classes, html, Callback, Classes, Component, Html, NodeRef, Properties};
 
@@ -21,7 +21,7 @@ pub enum Message {
 }
 
 pub struct NewBrainfartComponent {
-    titel_ref: NodeRef,
+    title_ref: NodeRef,
     innehal_ref: NodeRef,
     show_warning: bool,
     error_text: String,
@@ -59,23 +59,22 @@ impl NewBrainfartComponent {
     fn update_button_status(&mut self) -> bool {
         let fields = self.get_input_fields_content();
 
-        let should_be_disabled =
-            if ProduceraFantasiforsterFörfrågan::validera(&fields.0, &fields.1) {
-                false
-            } else {
-                true
-            };
+        let should_be_disabled = if CreateBrainfartRequest::validate(&fields.0, &fields.1) {
+            false
+        } else {
+            true
+        };
         let will_value_change = should_be_disabled != self.button_disabled;
         self.button_disabled = should_be_disabled;
         will_value_change
     }
 
     fn get_input_fields_content(&self) -> (String, String) {
-        let titel_element = self.titel_ref.cast::<HtmlInputElement>().unwrap();
-        let titel = titel_element.value();
+        let title_element = self.title_ref.cast::<HtmlInputElement>().unwrap();
+        let title = title_element.value();
         let innehal_element = self.innehal_ref.cast::<HtmlInputElement>().unwrap();
         let innehal = innehal_element.value();
-        (titel, innehal)
+        (title, innehal)
     }
 }
 
@@ -84,7 +83,7 @@ impl Component for NewBrainfartComponent {
     type Properties = NewBrainfartProps;
     fn create(_ctx: &yew::Context<Self>) -> Self {
         Self {
-            titel_ref: NodeRef::default(),
+            title_ref: NodeRef::default(),
             innehal_ref: NodeRef::default(),
             button_disabled: true,
             show_warning: false,
@@ -99,7 +98,7 @@ impl Component for NewBrainfartComponent {
             Message::AfterCreation => {
                 self.is_busy = false;
                 self.show_warning = false;
-                self.titel_ref
+                self.title_ref
                     .cast::<HtmlInputElement>()
                     .unwrap()
                     .set_value("");
@@ -120,9 +119,7 @@ impl Component for NewBrainfartComponent {
                     let resp = HelperService::add_authorization_header(Request::post(
                         "/api/createbrainfart",
                     ))
-                    .json(&ProduceraFantasiforsterFörfrågan::producera(
-                        fields.0, fields.1,
-                    ))
+                    .json(&CreateBrainfartRequest::create(fields.0, fields.1))
                     .unwrap()
                     .send()
                     .await
@@ -157,7 +154,7 @@ impl Component for NewBrainfartComponent {
         let on_click = ctx.link().callback(move |_e: MouseEvent| Message::Submit);
         let on_input = ctx.link().callback(move |_e: InputEvent| Message::SetField);
         let on_close = ctx.props().clone().on_close;
-        let titel_classes = classes!(
+        let title_classes = classes!(
             "w-full",
             "px-4",
             "py-2",
@@ -175,14 +172,14 @@ impl Component for NewBrainfartComponent {
                 {"New brainfart?"}
                 </h1>
                 <div>
-                    <label class={classes!("block")} for="titel">{"Title"}</label>
-                    <input ref={self.titel_ref.clone()} id="titel" type="text" placeholder={"Titel"} oninput={on_input.clone()}
-                    class={titel_classes.clone()}/>
+                    <label class={classes!("block")} for="title">{"Title"}</label>
+                    <input ref={self.title_ref.clone()} id="title" type="text" placeholder={"title"} oninput={on_input.clone()}
+                    class={title_classes.clone()}/>
                 </div>
                 <div>
                     <label class={classes!("block")} for="innehal">{"Content"}</label>
                     <textarea ref={self.innehal_ref.clone()} id="innehal" oninput={on_input.clone()}
-                    class={titel_classes}>
+                    class={title_classes}>
                     </textarea>
                 </div>
                 <div class="flex justify-end">

@@ -5,192 +5,186 @@ use serde::Serialize;
 type Uuid = String;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct FantasiforsterInformation {
+pub struct BrainfartInformation {
     pub id: Uuid,
-    pub titel: String,
-    pub innehåll: String,
-    pub födelsedag: DateTime<Local>,
-    pub uppfinnare_namn: String,
+    pub title: String,
+    pub content: String,
+    pub birthdate: DateTime<Local>,
+    pub mastermind_name: String,
 }
 
-impl PartialEq for FantasiforsterInformation {
+impl PartialEq for BrainfartInformation {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
     }
 }
 
-impl FantasiforsterInformation {
-    pub fn producera(
-        forster: Fantasiforster,
-        uppfinnare_namn: String,
-    ) -> FantasiforsterInformation {
-        FantasiforsterInformation {
+impl BrainfartInformation {
+    pub fn create(forster: Brainfart, mastermind_name: String) -> BrainfartInformation {
+        BrainfartInformation {
             id: forster.id,
-            titel: forster.titel,
-            innehåll: forster.innehåll,
-            födelsedag: forster.födelsedag,
-            uppfinnare_namn,
+            title: forster.title,
+            content: forster.content,
+            birthdate: forster.birthdate,
+            mastermind_name,
         }
     }
 }
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Fantasiforster {
+pub struct Brainfart {
     pub id: Uuid,
-    pub titel: String,
-    pub innehåll: String,
-    pub födelsedag: DateTime<Local>,
-    pub uppfinnare_id: Uuid,
+    pub title: String,
+    pub content: String,
+    pub birthdate: DateTime<Local>,
+    pub mastermind_id: Uuid,
 }
 
-impl Fantasiforster {
-    pub fn producera(
+impl Brainfart {
+    pub fn create(
         id: Uuid,
-        förfrågan: ProduceraFantasiforsterFörfrågan,
-        uppfinnare_id: Uuid,
-        födelsedag: DateTime<Local>,
-    ) -> Fantasiforster {
-        Fantasiforster {
+        request: CreateBrainfartRequest,
+        mastermind_id: Uuid,
+        birthdate: DateTime<Local>,
+    ) -> Brainfart {
+        Brainfart {
             id,
-            titel: förfrågan.titel,
-            innehåll: förfrågan.innehåll,
-            födelsedag,
-            uppfinnare_id,
+            title: request.title,
+            content: request.content,
+            birthdate,
+            mastermind_id,
         }
     }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct FantasiforsterFilter {}
+pub struct BrainfartFilter {}
 
-impl FantasiforsterFilter {
-    pub fn default() -> FantasiforsterFilter {
-        FantasiforsterFilter {}
+impl BrainfartFilter {
+    pub fn default() -> BrainfartFilter {
+        BrainfartFilter {}
     }
 }
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ProduceraFantasiforsterFörfrågan {
-    titel: String,
-    innehåll: String,
+pub struct CreateBrainfartRequest {
+    title: String,
+    content: String,
 }
 
-impl ProduceraFantasiforsterFörfrågan {
-    pub fn skaffa_mig_din_titel(&self) -> &str {
-        &self.titel
+impl CreateBrainfartRequest {
+    pub fn get_title(&self) -> &str {
+        &self.title
     }
-    pub fn skaffa_mig_ditt_innehåll(&self) -> &str {
-        &self.innehåll
-    }
-
-    pub fn validera(titel: &str, innehall: &str) -> bool {
-        !titel.is_empty() && !innehall.is_empty()
+    pub fn get_content(&self) -> &str {
+        &self.content
     }
 
-    pub fn producera(titel: String, innehåll: String) -> ProduceraFantasiforsterFörfrågan {
-        ProduceraFantasiforsterFörfrågan { titel, innehåll }
+    pub fn validate(title: &str, innehall: &str) -> bool {
+        !title.is_empty() && !innehall.is_empty()
+    }
+
+    pub fn create(title: String, content: String) -> CreateBrainfartRequest {
+        CreateBrainfartRequest { title, content }
     }
 }
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Hjärna {
+pub struct Brain {
     id: Uuid,
-    hjärnannamn: String,
-    födelsedag: DateTime<Local>,
-    krypterade_lösenordet: String,
+    brainname: String,
+    birthdate: DateTime<Local>,
+    encrypted_password: String,
 }
 
-impl Hjärna {
-    pub fn skaffa_mig_ditt_namn(&self) -> &str {
-        &self.hjärnannamn
+impl Brain {
+    pub fn get_name(&self) -> &str {
+        &self.brainname
     }
 
-    pub fn skaffa_mig_ditt_id(&self) -> &Uuid {
+    pub fn get_id(&self) -> &Uuid {
         &self.id
     }
 
-    pub fn skaffa_mig_ditt_krypterade_lösenordet(&self) -> &str {
-        &self.krypterade_lösenordet
+    pub fn get_encrypted_password(&self) -> &str {
+        &self.encrypted_password
     }
 
-    pub fn registrera(
+    pub fn register(
         id: Uuid,
-        förfrågan: RegistreraHjärnaFörfrågan,
-        födelsedag: DateTime<Local>,
-        krypterade_lösenordet: String,
-    ) -> Hjärna {
-        Hjärna {
+        request: RegisterBrainRequest,
+        birthdate: DateTime<Local>,
+        encrypted_password: String,
+    ) -> Brain {
+        Brain {
             id,
-            hjärnannamn: förfrågan.hjärnannamn,
-            födelsedag,
-            krypterade_lösenordet,
+            brainname: request.brainname,
+            birthdate,
+            encrypted_password,
         }
     }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct RegistreraHjärnaFörfrågan {
-    hjärnannamn: String,
-    lösenord: String,
-    lösenord_extra: String,
+pub struct RegisterBrainRequest {
+    brainname: String,
+    password: String,
+    password_extra: String,
 }
 
-impl RegistreraHjärnaFörfrågan {
-    pub fn skaffa_mig_ditt_namn(&self) -> &str {
-        &self.hjärnannamn
+impl RegisterBrainRequest {
+    pub fn get_name(&self) -> &str {
+        &self.brainname
     }
-    pub fn skaffa_mig_ditt_lösenord(&self) -> &str {
-        &self.lösenord
-    }
-
-    pub fn skaffa_mig_ditt_lösenord_extra(&self) -> &str {
-        &self.lösenord_extra
+    pub fn get_password(&self) -> &str {
+        &self.password
     }
 
-    pub fn producera(
-        hjärnannamn: String,
-        lösenord: String,
-        lösenord_extra: String,
-    ) -> RegistreraHjärnaFörfrågan {
-        RegistreraHjärnaFörfrågan {
-            hjärnannamn,
-            lösenord,
-            lösenord_extra,
+    pub fn get_password_extra(&self) -> &str {
+        &self.password_extra
+    }
+
+    pub fn create(
+        brainname: String,
+        password: String,
+        password_extra: String,
+    ) -> RegisterBrainRequest {
+        RegisterBrainRequest {
+            brainname,
+            password,
+            password_extra,
         }
     }
 
-    pub fn validera(hjärnannamn: &str, lösenord: &str, lösenord_extra: &str) -> bool {
-        !hjärnannamn.is_empty() && !lösenord.is_empty() && lösenord == lösenord_extra
+    pub fn validate(brainname: &str, password: &str, password_extra: &str) -> bool {
+        !brainname.is_empty() && !password.is_empty() && password == password_extra
     }
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct DemonstreraBesittarHjärnaFörfrågon {
-    hjärnannamn: String,
-    lösenord: String,
+pub struct ProveOwnsBrainRequest {
+    brainname: String,
+    password: String,
 }
-impl DemonstreraBesittarHjärnaFörfrågon {
-    pub fn skaffa_mig_ditt_namn(&self) -> &str {
-        &self.hjärnannamn
+impl ProveOwnsBrainRequest {
+    pub fn get_name(&self) -> &str {
+        &self.brainname
     }
-    pub fn skaffa_mig_ditt_lösenord(&self) -> &str {
-        &self.lösenord
+    pub fn get_password(&self) -> &str {
+        &self.password
     }
 
-    pub fn producera(
-        hjärnannamn: String,
-        lösenord: String,
-    ) -> DemonstreraBesittarHjärnaFörfrågon {
-        DemonstreraBesittarHjärnaFörfrågon {
-            hjärnannamn,
-            lösenord,
+    pub fn create(brainname: String, password: String) -> ProveOwnsBrainRequest {
+        ProveOwnsBrainRequest {
+            brainname,
+            password,
         }
     }
 
-    pub fn validera(hjärnannamn: &str, lösenord: &str) -> bool {
-        !hjärnannamn.is_empty() && !lösenord.is_empty()
+    pub fn validate(brainname: &str, password: &str) -> bool {
+        !brainname.is_empty() && !password.is_empty()
     }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JwtInformation {
-    pub hjärnannamn: String,
+    pub brainname: String,
     pub id: Uuid,
 }

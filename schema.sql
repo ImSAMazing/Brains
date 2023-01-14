@@ -1,17 +1,24 @@
-create table hjärnor(
+create table brains(
 	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-	hjärnannamn VARCHAR(255) NOT NULL UNIQUE,
-	lösenord VARCHAR(255) NOT NULL,
-	födelsedag TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-	senasteuppdateringdag TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	brainname VARCHAR(255) NOT NULL UNIQUE,
+	password VARCHAR(255) NOT NULL,
+	birthdate TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	lastupdatedate TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-create table fantasifoster(
+create table brainfarts(
 	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-	titel VARCHAR(255) NOT NULL, 
-	innehåll TEXT NOT NULL,
-	födelsedag TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-	uppfinnare UUID,
-	CONSTRAINT fk_hjärnor FOREIGN KEY(uppfinnare) REFERENCES hjärnor(id)
+	title VARCHAR(255) NOT NULL, 
+	content TEXT NOT NULL,
+	birthdate TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	mastermind UUID,
+	CONSTRAINT fk_brains FOREIGN KEY(mastermind) REFERENCES brains(id)
 	);
-	
+
+create table mindsblownbyfarts(
+	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+	brainfartid UUID,
+	brainid UUID,
+	CONSTRAINT fk_brain FOREIGN KEY(brainid) REFERENCES brains(id),
+	CONSTRAINT fk_brainfart FOREIGN KEY(brainfartid) REFERENCES brainfarts(id)
+);
 	

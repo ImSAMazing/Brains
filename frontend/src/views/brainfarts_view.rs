@@ -1,5 +1,5 @@
 use gloo_net::http::Request;
-use shared::FantasiforsterInformation;
+use shared::BrainfartInformation;
 use yew::{classes, html, Component, Html, Properties};
 
 use crate::{
@@ -17,11 +17,11 @@ pub struct BrainfartsProps {
 
 pub enum Message {
     None,
-    Fantasiforster(Vec<FantasiforsterInformation>),
+    Brainfart(Vec<BrainfartInformation>),
 }
 
 pub struct BrainfartsView {
-    fantasiforster: Vec<FantasiforsterInformation>,
+    brainfarts: Vec<BrainfartInformation>,
 }
 
 impl BrainfartsView {
@@ -36,14 +36,14 @@ impl BrainfartsView {
 
             if !resp.ok() {
                 log::error!(
-                    "Received an error while trying to get fantasifoster: {:?}",
+                    "Received an error while trying to get brainfarts: {:?}",
                     resp
                 );
                 Message::None
             } else {
                 let json = serde_json::from_str(&response_text);
-                if let Ok(fantasiforster) = json {
-                    Message::Fantasiforster(fantasiforster)
+                if let Ok(brainfarts) = json {
+                    Message::Brainfart(brainfarts)
                 } else {
                     if let Err(e) = json {
                         log::debug!("IMproper response: {:?}", e);
@@ -62,16 +62,14 @@ impl Component for BrainfartsView {
     type Properties = BrainfartsProps;
     fn create(ctx: &yew::Context<Self>) -> Self {
         Self::get_brainfarts(ctx);
-        Self {
-            fantasiforster: vec![],
-        }
+        Self { brainfarts: vec![] }
     }
 
     fn update(&mut self, _ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Message::None => false,
-            Message::Fantasiforster(fantasiforster) => {
-                self.fantasiforster = fantasiforster;
+            Message::Brainfart(brainfarts) => {
+                self.brainfarts = brainfarts;
                 true
             }
         }
@@ -81,7 +79,7 @@ impl Component for BrainfartsView {
         log::debug!("Viewed called");
         if let Some(_) = HelperService::get_jwt_information() {
             let forster = self
-                .fantasiforster
+                .brainfarts
                 .iter()
                 .map(|forster| {
                     html! {<BrainfartComponent forster={forster.clone()}/>}
@@ -89,7 +87,7 @@ impl Component for BrainfartsView {
                 .collect::<Html>();
             html! {
                 <div>
-                if self.fantasiforster.len() > 0{
+                if self.brainfarts.len() > 0{
                     <div class={classes!("flex","items-center","justify-between","flex-col")}>
                     {forster}
                     </div>
