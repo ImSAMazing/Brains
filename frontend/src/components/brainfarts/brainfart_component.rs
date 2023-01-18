@@ -3,7 +3,7 @@ use yew::{classes, html, Component, Html, Properties};
 
 #[derive(Properties, Clone, PartialEq)]
 pub struct BrainfartProps {
-    pub forster: BrainfartInformation,
+    pub brainfart: BrainfartInformation,
 }
 
 pub enum Message {}
@@ -24,18 +24,18 @@ impl Component for BrainfartComponent {
     }
 
     fn view(&self, ctx: &yew::Context<Self>) -> Html {
-        let forster = &ctx.props().forster;
-        let dag = forster.birthdate.format("%Y/%m/%d %H:%M").to_string();
+        let brainfart = &ctx.props().brainfart;
+        let dag = brainfart.birthdate.format("%Y/%m/%d %H:%M").to_string();
         html! {
-            <div key={forster.id.to_string()} class={classes!("block", "xl:w-2/5", "md:w-2/3", "sm:w-4/5", "xs:w-full", "border", "border-gray-300", "rounded-lg", "shadow-md", "bg-gray-50", "mt-2")}>
+            <div key={brainfart.id.to_string()} class={classes!("block", "xl:w-2/5", "md:w-2/3", "sm:w-4/5", "xs:w-full", "border", "border-gray-300", "rounded-lg", "shadow-md", "bg-gray-50", "mt-2")}>
                 <div class={classes!("p-2", "border-b", "rounded-t", "dark:border-gray-600", "items-center", "justify-center")}>
                     <h1 class={classes!( "font-bold", "tracking-tight", "text-center")}>
-                    {&forster.title}
+                    {&brainfart.title}
                     </h1>
                 </div>
                 <div class={classes!("p-3", "space-y-3", "bg-gray-100")}>
                     <p class={classes!("font-normal", "text-gray-600",  "dark:text-gray-400", "text-base", "leading-relaxed")}>
-                    {&forster.content}
+                    {&brainfart.content}
                     </p>
                 </div>
                 <div class={classes!("flex","justify-end", "border-t", "border-gray-200", "rounded-b", "space-x-2")}>
@@ -47,7 +47,7 @@ impl Component for BrainfartComponent {
                         <svg class="w-4 h-4 ml-2 mr-1" viewBox="0 0 20 20">
                             <path d="M12.075,10.812c1.358-0.853,2.242-2.507,2.242-4.037c0-2.181-1.795-4.618-4.198-4.618S5.921,4.594,5.921,6.775c0,1.53,0.884,3.185,2.242,4.037c-3.222,0.865-5.6,3.807-5.6,7.298c0,0.23,0.189,0.42,0.42,0.42h14.273c0.23,0,0.42-0.189,0.42-0.42C17.676,14.619,15.297,11.677,12.075,10.812 M6.761,6.775c0-2.162,1.773-3.778,3.358-3.778s3.359,1.616,3.359,3.778c0,2.162-1.774,3.778-3.359,3.778S6.761,8.937,6.761,6.775 M3.415,17.69c0.218-3.51,3.142-6.297,6.704-6.297c3.562,0,6.486,2.787,6.705,6.297H3.415z"></path>
                         </svg>
-                        {&forster.mastermind_name}
+                        {&brainfart.mastermind_name}
                     </p>
                 </div>
             </div>

@@ -78,18 +78,18 @@ impl Component for BrainfartsView {
     fn view(&self, _ctx: &yew::Context<Self>) -> Html {
         log::debug!("Viewed called");
         if let Some(_) = HelperService::get_jwt_information() {
-            let forster = self
+            let brainfart = self
                 .brainfarts
                 .iter()
-                .map(|forster| {
-                    html! {<BrainfartComponent forster={forster.clone()}/>}
+                .map(|brainfart| {
+                    html! {<BrainfartComponent brainfart={brainfart.clone()}/>}
                 })
                 .collect::<Html>();
             html! {
                 <div>
                 if self.brainfarts.len() > 0{
                     <div class={classes!("flex","items-center","justify-between","flex-col")}>
-                    {forster}
+                    {brainfart}
                     </div>
                 }else{
                     <LoadingComponent/>

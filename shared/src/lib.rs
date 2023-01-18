@@ -5,12 +5,38 @@ use serde::Serialize;
 type Uuid = String;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct BrainInformation {
+    id: Uuid,
+    name: String,
+    birthdate: DateTime<Local>,
+}
+
+impl BrainInformation {
+    pub fn create_from_brain(brain: Brain) -> BrainInformation {
+        BrainInformation {
+            id: brain.id,
+            name: brain.brainname,
+            birthdate: brain.birthdate,
+        }
+    }
+
+    pub fn create(id: Uuid, name: String, birthdate: DateTime<Local>) -> BrainInformation {
+        BrainInformation {
+            id,
+            name,
+            birthdate,
+        }
+    }
+}
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct BrainfartInformation {
     pub id: Uuid,
     pub title: String,
     pub content: String,
     pub birthdate: DateTime<Local>,
     pub mastermind_name: String,
+    pub blew_minds: Vec<BrainInformation>,
+    pub imploded_minds: Vec<BrainInformation>,
 }
 
 impl PartialEq for BrainfartInformation {
@@ -20,13 +46,32 @@ impl PartialEq for BrainfartInformation {
 }
 
 impl BrainfartInformation {
-    pub fn create(forster: Brainfart, mastermind_name: String) -> BrainfartInformation {
+    pub fn create(
+        brainfart: Brainfart,
+        mastermind_name: String,
+        blew_minds: Vec<BrainInformation>,
+        imploded_minds: Vec<BrainInformation>,
+    ) -> BrainfartInformation {
         BrainfartInformation {
-            id: forster.id,
-            title: forster.title,
-            content: forster.content,
-            birthdate: forster.birthdate,
+            id: brainfart.id,
+            title: brainfart.title,
+            content: brainfart.content,
+            birthdate: brainfart.birthdate,
             mastermind_name,
+            blew_minds,
+            imploded_minds,
+        }
+    }
+
+    pub fn empty() -> BrainfartInformation {
+        BrainfartInformation {
+            id: Uuid::default(),
+            title: String::default(),
+            content: String::default(),
+            birthdate: Local::now(),
+            mastermind_name: String::default(),
+            blew_minds: vec![],
+            imploded_minds: vec![],
         }
     }
 }

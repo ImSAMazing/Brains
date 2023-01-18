@@ -76,6 +76,8 @@ async fn main() {
         .route("/api/registerbrain", post(register_brain))
         .route("/api/getbrainfarts", get(get_some_brainfarts))
         .route("/api/loginasbrain", post(show_i_own_brain))
+        .route("/api/registermindexplosion", post(register_mind_explosion))
+        .route("/api/registermindimplosion", post(register_mind_implosion))
         .merge(axum_extra::routing::SpaRouter::new(
             "/assets",
             opt.static_dir,
@@ -115,13 +117,13 @@ async fn create_brainfarts(
     match result {
         Ok(Json(payload)) => match payload.create(pool, mastermind_id).await {
             Some(response) => {
-                let forster = Brainfart::create(
+                let brainfart = Brainfart::create(
                     response.uuid.to_string(),
                     payload,
                     mastermind_id.to_string(),
                     response.birthdate,
                 );
-                Ok((StatusCode::CREATED, Json(forster)))
+                Ok((StatusCode::CREATED, Json(brainfart)))
             }
             None => Err((StatusCode::INTERNAL_SERVER_ERROR, "Create ".to_string())),
         },

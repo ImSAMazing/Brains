@@ -18,6 +18,7 @@ create table mindsblownbyfarts(
 	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
 	brainfartid UUID,
 	brainid UUID,
+	explosion bool,
 	CONSTRAINT fk_brain FOREIGN KEY(brainid) REFERENCES brains(id),
 	CONSTRAINT fk_brainfart FOREIGN KEY(brainfartid) REFERENCES brainfarts(id)
 );
