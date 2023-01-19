@@ -33,45 +33,40 @@ pub async fn get_brainfarts_using_filter(
 
     if let Ok(result) = select_query {
         let mut final_result = vec![];
-        let result_iter:  =  result
-            .iter()
-            .map(|a| async {
-                let minds_blown_query = sqlx::query!(
-                    "select explosion, brainid from mindsblownbyfarts where brainfartid=$1",
-                    a.id
-                )
-                .fetch_all(&pool)
-                .await;
-                if let Ok(minds_blown_result) = minds_blown_query {
-                    let mut minds_blown = vec![];
-                    let mut minds_imploded = vec![];
-                    for record in minds_blown_result.iter() {
-                        if let Some(brain_info) =
-                            get_brain_information(pool, record.brainid.unwrap()).await
-                        {
-                            if record.explosion.unwrap() {
-                                minds_blown.push(brain_info);
-                            } else {
-                                minds_imploded.push(brain_info);
-                            }
+        for a in result.iter() {
+            let minds_blown_query = sqlx::query!(
+                "select explosion, brainid from mindsblownbyfarts where brainfartid=$1",
+                a.id
+            )
+            .fetch_all(&pool)
+            .await;
+            if let Ok(minds_blown_result) = minds_blown_query {
+                let mut minds_blown = vec![];
+                let mut minds_imploded = vec![];
+                for record in minds_blown_result.iter() {
+                    if let Some(brain_info) =
+                        get_brain_information(pool, record.brainid.unwrap()).await
+                    {
+                        if record.explosion.unwrap() {
+                            minds_blown.push(brain_info);
+                        } else {
+                            minds_imploded.push(brain_info);
                         }
                     }
-                    BrainfartInformation {
-                        id: a.id.to_string(),
-                        title: a.title.clone(),
-                        content: a.content.clone(),
-                        birthdate: a.birthdate.into(),
-                        mastermind_name: a.mastermind_name.clone().unwrap(),
-                        blew_minds: minds_blown,
-                        imploded_minds: minds_imploded,
-                    }
-                } else {
-                    BrainfartInformation::empty()
                 }
-            })
-            .collect()
-        {
-            final_result.push(info_future.await);
+                BrainfartInformation {
+                    id: a.id.to_string(),
+                    title: a.title.clone(),
+                    content: a.content.clone(),
+                    birthdate: a.birthdate.into(),
+                    mastermind_name: a.mastermind_name.clone().unwrap(),
+                    blew_minds: minds_blown,
+                    imploded_minds: minds_imploded,
+                }
+            } else {
+                BrainfartInformation::empty()
+            }
+            final_result.push(item.await);
         }
         Some(final_result)
     } else {
