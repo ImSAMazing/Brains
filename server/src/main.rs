@@ -141,10 +141,70 @@ async fn get_some_brainfarts(
     } else {
         BrainfartFilter::default()
     };
-    if let Some(brainfarts) = get_models::_get_brainfarts_från_filter(pool, filter).await {
+    if let Some(brainfarts) = get_models::get_brainfarts_using_filter(pool, filter).await {
         Ok((StatusCode::OK, Json(brainfarts)))
     } else {
         Err((StatusCode::NOT_FOUND, "Error".to_string()))
+    }
+}
+
+async fn register_mind_explosion(
+    State(pool): State<ConnectionPool>,
+    result: Result<Json<RegisterBrainRequest>, JsonRejection>,
+) -> impl IntoResponse {
+    match result {
+        Ok(Json(payload)) => match payload.create(pool, Uuid::nil()).await {
+            Some(response) => {
+                let brain = Brain::register(
+                    response.uuid.to_string(),
+                    payload,
+                    response.birthdate,
+                    response.extra_information.unwrap(),
+                );
+                Ok((
+                    StatusCode::CREATED,
+                    Json(create_jwt(
+                        Uuid::parse_str(brain.get_id()).unwrap(),
+                        brain.get_name().to_string(),
+                    )),
+                ))
+            }
+            None => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Something went wrong creating the brainfart!".to_string(),
+            )),
+        },
+        Err(err) => Err(error_responders::post_error_responder(err)),
+    }
+}
+
+async fn register_mind_implosion(
+    State(pool): State<ConnectionPool>,
+    result: Result<Json<RegisterBrainRequest>, JsonRejection>,
+) -> impl IntoResponse {
+    match result {
+        Ok(Json(payload)) => match payload.create(pool, Uuid::nil()).await {
+            Some(response) => {
+                let brain = Brain::register(
+                    response.uuid.to_string(),
+                    payload,
+                    response.birthdate,
+                    response.extra_information.unwrap(),
+                );
+                Ok((
+                    StatusCode::CREATED,
+                    Json(create_jwt(
+                        Uuid::parse_str(brain.get_id()).unwrap(),
+                        brain.get_name().to_string(),
+                    )),
+                ))
+            }
+            None => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Something went wrong creating the brainfart!".to_string(),
+            )),
+        },
+        Err(err) => Err(error_responders::post_error_responder(err)),
     }
 }
 

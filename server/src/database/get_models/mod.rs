@@ -3,12 +3,12 @@ use std::future::Future;
 use shared::{Brain, BrainInformation, BrainfartFilter, BrainfartInformation};
 use sqlx::{types::Uuid, Pool, Postgres};
 
-async fn get_brain_information(pool: Pool<Postgres>, brain_id: Uuid) -> Option<BrainInformation> {
+async fn get_brain_information(pool: &Pool<Postgres>, brain_id: Uuid) -> Option<BrainInformation> {
     let query = sqlx::query!(
         "select brainname, birthdate from brains where id=$1 LIMIT 1",
         brain_id
     )
-    .fetch_one(&pool)
+    .fetch_one(pool)
     .await;
     if let Ok(result) = query {
         Some(BrainInformation::create(
@@ -45,7 +45,7 @@ pub async fn get_brainfarts_using_filter(
                 let mut minds_imploded = vec![];
                 for record in minds_blown_result.iter() {
                     if let Some(brain_info) =
-                        get_brain_information(pool, record.brainid.unwrap()).await
+                        get_brain_information(&pool, record.brainid.unwrap()).await
                     {
                         if record.explosion.unwrap() {
                             minds_blown.push(brain_info);
@@ -54,7 +54,8 @@ pub async fn get_brainfarts_using_filter(
                         }
                     }
                 }
-                BrainfartInformation {
+
+                final_result.push(BrainfartInformation {
                     id: a.id.to_string(),
                     title: a.title.clone(),
                     content: a.content.clone(),
@@ -62,11 +63,8 @@ pub async fn get_brainfarts_using_filter(
                     mastermind_name: a.mastermind_name.clone().unwrap(),
                     blew_minds: minds_blown,
                     imploded_minds: minds_imploded,
-                }
-            } else {
-                BrainfartInformation::empty()
+                });
             }
-            final_result.push(item.await);
         }
         Some(final_result)
     } else {
