@@ -41,7 +41,6 @@ impl Component for NewBrainfartView {
             }
             Message::CloseModal => {
                 self.show_modal = false;
-                log::debug!("Triggered");
                 true
             }
             Message::OverlayClicked => {
