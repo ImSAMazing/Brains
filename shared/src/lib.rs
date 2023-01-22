@@ -75,6 +75,17 @@ impl BrainfartInformation {
         }
     }
 }
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct NotifyAboutMindExplosionRequest {
+    pub brainfart_id: Uuid,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct NotifyAboutMindImplosionRequest {
+    pub brainfart_id: Uuid,
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Brainfart {
     pub id: Uuid,

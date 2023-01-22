@@ -4,7 +4,10 @@ use argon2::{
 };
 use axum::async_trait;
 use chrono::{DateTime, Local};
-use shared::{CreateBrainfartRequest, RegisterBrainRequest};
+use shared::{
+    CreateBrainfartRequest, NotifyAboutMindExplosionRequest, NotifyAboutMindImplosionRequest,
+    RegisterBrainRequest,
+};
 use sqlx::{types::Uuid, Pool, Postgres};
 
 pub struct CreateResponse {
@@ -12,10 +15,96 @@ pub struct CreateResponse {
     pub birthdate: DateTime<Local>,
     pub extra_information: Option<String>,
 }
+impl CreateResponse {
+    pub fn empty() -> CreateResponse {
+        CreateResponse {
+            uuid: Uuid::default(),
+            birthdate: Local::now(),
+            extra_information: None,
+        }
+    }
+}
 #[async_trait]
 pub trait CreateFromRequest {
     async fn create(&self, pool: Pool<Postgres>, foreign_id: Uuid) -> Option<CreateResponse>;
 }
+
+#[async_trait]
+impl CreateFromRequest for NotifyAboutMindExplosionRequest {
+    async fn create(&self, pool: Pool<Postgres>, foreign_id: Uuid) -> Option<CreateResponse> {
+        let brainfart_uuid = Uuid::parse_str(&self.brainfart_id).unwrap();
+        let check_existence_query = sqlx::query!(
+            "SELECT id from mindsblownbyfarts where brainfartid=$1 and brainid=$2 LIMIT 1",
+            &brainfart_uuid,
+            foreign_id
+        )
+        .fetch_one(&pool)
+        .await;
+        if let Ok(change_result) = match check_existence_query {
+            Ok(result) => {
+                sqlx::query!(
+                    "update mindsblownbyfarts set explosion=true where id=$1",
+                    result.id
+                )
+                .execute(&pool)
+                .await
+            }
+            Err(_) => {
+                sqlx::query!(
+                "insert into mindsblownbyfarts(brainfartid, brainid, explosion) VALUES($1,$2,true)",
+                &brainfart_uuid,
+                foreign_id
+            )
+                .execute(&pool)
+                .await
+            }
+        } {
+            if change_result.rows_affected() > 0 {
+                return Some(CreateResponse::empty());
+            }
+        }
+        None
+    }
+}
+
+#[async_trait]
+impl CreateFromRequest for NotifyAboutMindImplosionRequest {
+    async fn create(&self, pool: Pool<Postgres>, foreign_id: Uuid) -> Option<CreateResponse> {
+        let brainfart_uuid = Uuid::parse_str(&self.brainfart_id).unwrap();
+        let check_existence_query = sqlx::query!(
+            "SELECT id from mindsblownbyfarts where brainfartid=$1 and brainid=$2 LIMIT 1",
+            &brainfart_uuid,
+            foreign_id
+        )
+        .fetch_one(&pool)
+        .await;
+        if let Ok(change_result) = match check_existence_query {
+            Ok(result) => {
+                sqlx::query!(
+                    "update mindsblownbyfarts set explosion=false where id=$1",
+                    result.id
+                )
+                .execute(&pool)
+                .await
+            }
+            Err(_) => {
+                sqlx::query!(
+                "insert into mindsblownbyfarts(brainfartid, brainid, explosion) VALUES($1,$2,false)",
+                &brainfart_uuid,
+                foreign_id
+            )
+                .execute(&pool)
+                .await
+            }
+        } {
+            if change_result.rows_affected() > 0 {
+                return Some(CreateResponse::empty());
+            }
+        }
+        None
+    }
+}
+
 #[async_trait]
 impl CreateFromRequest for CreateBrainfartRequest {
     async fn create(&self, pool: Pool<Postgres>, foreign_id: Uuid) -> Option<CreateResponse> {

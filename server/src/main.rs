@@ -12,8 +12,8 @@ use database::{
 };
 use jwt_simple::prelude::ES384KeyPair;
 use shared::{
-    Brain, Brainfart, BrainfartFilter, CreateBrainfartRequest, ProveOwnsBrainRequest,
-    RegisterBrainRequest,
+    Brain, Brainfart, BrainfartFilter, CreateBrainfartRequest, NotifyAboutMindExplosionRequest,
+    ProveOwnsBrainRequest, RegisterBrainRequest,
 };
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
@@ -150,28 +150,14 @@ async fn get_some_brainfarts(
 
 async fn register_mind_explosion(
     State(pool): State<ConnectionPool>,
-    result: Result<Json<RegisterBrainRequest>, JsonRejection>,
+    result: Result<Json<NotifyAboutMindExplosionRequest>, JsonRejection>,
 ) -> impl IntoResponse {
     match result {
         Ok(Json(payload)) => match payload.create(pool, Uuid::nil()).await {
-            Some(response) => {
-                let brain = Brain::register(
-                    response.uuid.to_string(),
-                    payload,
-                    response.birthdate,
-                    response.extra_information.unwrap(),
-                );
-                Ok((
-                    StatusCode::CREATED,
-                    Json(create_jwt(
-                        Uuid::parse_str(brain.get_id()).unwrap(),
-                        brain.get_name().to_string(),
-                    )),
-                ))
-            }
+            Some(_) => Ok((StatusCode::CREATED, "")),
             None => Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "Something went wrong creating the brainfart!".to_string(),
+                "Something went wrong registering the mindexplosion".to_string(),
             )),
         },
         Err(err) => Err(error_responders::post_error_responder(err)),
@@ -184,24 +170,10 @@ async fn register_mind_implosion(
 ) -> impl IntoResponse {
     match result {
         Ok(Json(payload)) => match payload.create(pool, Uuid::nil()).await {
-            Some(response) => {
-                let brain = Brain::register(
-                    response.uuid.to_string(),
-                    payload,
-                    response.birthdate,
-                    response.extra_information.unwrap(),
-                );
-                Ok((
-                    StatusCode::CREATED,
-                    Json(create_jwt(
-                        Uuid::parse_str(brain.get_id()).unwrap(),
-                        brain.get_name().to_string(),
-                    )),
-                ))
-            }
+            Some(_) => Ok((StatusCode::CREATED, "")),
             None => Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
-                "Something went wrong creating the brainfart!".to_string(),
+                "Something went wrong registering the mindimplosion".to_string(),
             )),
         },
         Err(err) => Err(error_responders::post_error_responder(err)),
