@@ -9,6 +9,8 @@ use crate::HelperService;
 pub struct NewBrainfartProps {
     pub on_creation: Callback<String>,
     pub on_close: Callback<MouseEvent>,
+    pub on_mouse_enters_content_area: Callback<MouseEvent>,
+    pub on_mouse_leaves_content_area: Callback<MouseEvent>,
 }
 pub struct AfterApiAction {
     error_text: String,
@@ -154,6 +156,8 @@ impl Component for NewBrainfartComponent {
         let on_click = ctx.link().callback(move |_e: MouseEvent| Message::Submit);
         let on_input = ctx.link().callback(move |_e: InputEvent| Message::SetField);
         let on_close = ctx.props().clone().on_close;
+        let on_mouse_enters_content_area = ctx.props().clone().on_mouse_enters_content_area;
+        let on_mouse_leaves_content_area = ctx.props().clone().on_mouse_leaves_content_area;
         let title_classes = classes!(
             "w-full",
             "px-4",
@@ -166,7 +170,7 @@ impl Component for NewBrainfartComponent {
             "focus:ring-blue-600"
         );
         html! {
-            <div class={classes!("block", "border", "w-full", "p-6", "border-gray-300", "rounded-lg", "shadow-md", "bg-gray-400")}>
+            <div class={classes!("block", "border", "w-full", "p-6", "border-gray-300", "rounded-lg", "shadow-md", "bg-gray-400")} onmouseleave={on_mouse_leaves_content_area} onmouseenter={on_mouse_enters_content_area} >
                 <button onclick={on_close} class={classes!("float-right","block","text-white","bg-blue-700","hover:bg-blue-800","focus:ring-4","focus:outline-none","focus:ring-blue-300","font-medium","rounded-lg","text-sm","px-5","py-2.5","text-center")}>{"Cancel"}</button>
                 <h1 class={classes!("text-xl","mb-2", "font-bold", "tracking-tight", "text-center")}>
                 {"New brainfart?"}

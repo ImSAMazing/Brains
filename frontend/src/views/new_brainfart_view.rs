@@ -11,10 +11,14 @@ pub struct NewBrainfartViewProps {
 pub enum Message {
     TriggerModal,
     CloseModal,
+    OverlayClicked,
+    MouseMovesIntoContent,
+    MouseLeavesContent,
 }
 
 pub struct NewBrainfartView {
     show_modal: bool,
+    mouse_is_in_content_area: bool,
 }
 
 impl NewBrainfartView {}
@@ -23,7 +27,10 @@ impl Component for NewBrainfartView {
     type Message = Message;
     type Properties = NewBrainfartViewProps;
     fn create(_ctx: &yew::Context<Self>) -> Self {
-        Self { show_modal: false }
+        Self {
+            show_modal: false,
+            mouse_is_in_content_area: false,
+        }
     }
 
     fn update(&mut self, _ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
@@ -37,6 +44,21 @@ impl Component for NewBrainfartView {
                 log::debug!("Triggered");
                 true
             }
+            Message::OverlayClicked => {
+                if self.show_modal && !self.mouse_is_in_content_area {
+                    self.update(_ctx, Message::CloseModal)
+                } else {
+                    false
+                }
+            }
+            Message::MouseLeavesContent => {
+                self.mouse_is_in_content_area = false;
+                false
+            }
+            Message::MouseMovesIntoContent => {
+                self.mouse_is_in_content_area = true;
+                false
+            }
         }
     }
 
@@ -46,7 +68,7 @@ impl Component for NewBrainfartView {
             .callback(move |_e: MouseEvent| Message::TriggerModal);
         let on_overlay_click = ctx
             .link()
-            .callback(move |_e: MouseEvent| Message::CloseModal);
+            .callback(move |_e: MouseEvent| Message::OverlayClicked);
         let on_close = ctx
             .link()
             .callback(move |_e: MouseEvent| Message::CloseModal);
@@ -55,6 +77,13 @@ impl Component for NewBrainfartView {
             prop_brainfart.emit(s);
             Message::CloseModal
         });
+
+        let on_mouse_enter_content = ctx
+            .link()
+            .callback(move |_e: MouseEvent| Message::MouseMovesIntoContent);
+        let on_mouse_leaves_content = ctx
+            .link()
+            .callback(move |_e: MouseEvent| Message::MouseLeavesContent);
 
         let mut base_modal_classes = classes!(
             "fixed",
@@ -113,7 +142,7 @@ impl Component for NewBrainfartView {
                 </div>
                 <div class={gray_overlay_classes} ></div>
                 <div tabindex="-1" class={base_modal_classes} onclick={on_overlay_click}>
-                    <NewBrainfartComponent on_creation={on_new_brainfart} on_close={on_close}/>
+                    <NewBrainfartComponent on_creation={on_new_brainfart} on_close={on_close} on_mouse_enters_content_area={on_mouse_enter_content} on_mouse_leaves_content_area={on_mouse_leaves_content}/>
                 </div>
 
             </div>
