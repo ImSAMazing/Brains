@@ -13,7 +13,7 @@ use database::{
 use jwt_simple::prelude::ES384KeyPair;
 use shared::{
     Brain, Brainfart, BrainfartFilter, CreateBrainfartRequest, NotifyAboutMindExplosionRequest,
-    ProveOwnsBrainRequest, RegisterBrainRequest,
+    NotifyAboutMindImplosionRequest, ProveOwnsBrainRequest, RegisterBrainRequest,
 };
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
@@ -150,10 +150,14 @@ async fn get_some_brainfarts(
 
 async fn register_mind_explosion(
     State(pool): State<ConnectionPool>,
+    claims: JwtDataHolder,
     result: Result<Json<NotifyAboutMindExplosionRequest>, JsonRejection>,
 ) -> impl IntoResponse {
     match result {
-        Ok(Json(payload)) => match payload.create(pool, Uuid::nil()).await {
+        Ok(Json(payload)) => match payload
+            .create(pool, Uuid::parse_str(&claims.information.id).unwrap())
+            .await
+        {
             Some(_) => Ok((StatusCode::CREATED, "")),
             None => Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -166,10 +170,14 @@ async fn register_mind_explosion(
 
 async fn register_mind_implosion(
     State(pool): State<ConnectionPool>,
-    result: Result<Json<RegisterBrainRequest>, JsonRejection>,
+    claims: JwtDataHolder,
+    result: Result<Json<NotifyAboutMindImplosionRequest>, JsonRejection>,
 ) -> impl IntoResponse {
     match result {
-        Ok(Json(payload)) => match payload.create(pool, Uuid::nil()).await {
+        Ok(Json(payload)) => match payload
+            .create(pool, Uuid::parse_str(&claims.information.id).unwrap())
+            .await
+        {
             Some(_) => Ok((StatusCode::CREATED, "")),
             None => Err((
                 StatusCode::INTERNAL_SERVER_ERROR,

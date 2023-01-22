@@ -1,6 +1,4 @@
-use std::future::Future;
-
-use shared::{Brain, BrainInformation, BrainfartFilter, BrainfartInformation};
+use shared::{BrainInformation, BrainfartFilter, BrainfartInformation};
 use sqlx::{types::Uuid, Pool, Postgres};
 
 async fn get_brain_information(pool: &Pool<Postgres>, brain_id: Uuid) -> Option<BrainInformation> {

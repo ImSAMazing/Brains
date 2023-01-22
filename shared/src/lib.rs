@@ -2,7 +2,7 @@ use chrono::DateTime;
 use chrono::Local;
 use serde::Deserialize;
 use serde::Serialize;
-type Uuid = String;
+pub type Uuid = String;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct BrainInformation {

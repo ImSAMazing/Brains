@@ -1,5 +1,8 @@
 use gloo_net::http::Request;
-use shared::BrainfartInformation;
+use shared::{
+    BrainfartInformation, NotifyAboutMindExplosionRequest, NotifyAboutMindImplosionRequest, Uuid,
+};
+use web_sys::MouseEvent;
 use yew::{classes, html, Component, Html, Properties};
 
 use crate::{
@@ -18,6 +21,9 @@ pub struct BrainfartsProps {
 pub enum Message {
     None,
     Brainfart(Vec<BrainfartInformation>),
+    NewExplosion(Uuid),
+    NewImplosion(Uuid),
+    UpdatedBrainfart(BrainfartInformation),
 }
 
 pub struct BrainfartsView {
@@ -55,6 +61,75 @@ impl BrainfartsView {
             }
         });
     }
+    fn send_new_implosion(ctx: &yew::Context<Self>, brainfart_id: Uuid) {
+        ctx.link().send_future(async move {
+            let resp = HelperService::add_authorization_header(Request::post(
+                "/api/registermindimplosion",
+            ))
+            .json(&NotifyAboutMindImplosionRequest { brainfart_id })
+            .unwrap()
+            .send()
+            .await
+            .unwrap();
+
+            let response_text = resp.text().await.unwrap();
+
+            if !resp.ok() {
+                log::error!(
+                    "Received an error while trying to get brainfarts: {:?}",
+                    resp
+                );
+                Message::None
+            } else {
+                let json = serde_json::from_str(&response_text);
+                if let Ok(brainfart) = json {
+                    Message::UpdatedBrainfart(brainfart)
+                } else {
+                    if let Err(e) = json {
+                        log::debug!("IMproper response: {:?}", e);
+                        Message::None
+                    } else {
+                        Message::None
+                    }
+                }
+            }
+        });
+    }
+
+    fn send_new_explosion(ctx: &yew::Context<Self>, brainfart_id: Uuid) {
+        ctx.link().send_future(async move {
+            let resp = HelperService::add_authorization_header(Request::post(
+                "/api/registermindexplosion",
+            ))
+            .json(&NotifyAboutMindExplosionRequest { brainfart_id })
+            .unwrap()
+            .send()
+            .await
+            .unwrap();
+
+            let response_text = resp.text().await.unwrap();
+
+            if !resp.ok() {
+                log::error!(
+                    "Received an error while trying to get brainfarts: {:?}",
+                    resp
+                );
+                Message::None
+            } else {
+                let json = serde_json::from_str(&response_text);
+                if let Ok(brainfart) = json {
+                    Message::UpdatedBrainfart(brainfart)
+                } else {
+                    if let Err(e) = json {
+                        log::debug!("IMproper response: {:?}", e);
+                        Message::None
+                    } else {
+                        Message::None
+                    }
+                }
+            }
+        });
+    }
 }
 
 impl Component for BrainfartsView {
@@ -65,24 +140,50 @@ impl Component for BrainfartsView {
         Self { brainfarts: vec![] }
     }
 
-    fn update(&mut self, _ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Message::None => false,
             Message::Brainfart(brainfarts) => {
                 self.brainfarts = brainfarts;
                 true
             }
+            Message::NewExplosion(fartid) => {
+                Self::send_new_explosion(ctx, fartid);
+                false
+            }
+            Message::NewImplosion(fartid) => {
+                Self::send_new_implosion(ctx, fartid);
+                false
+            }
+            Message::UpdatedBrainfart(changed_fart) => {
+                if let Some(index) = self
+                    .brainfarts
+                    .iter_mut()
+                    .find(|item| item.id == changed_fart.id)
+                {
+                    index.blew_minds = changed_fart.blew_minds;
+                    index.imploded_minds = changed_fart.imploded_minds;
+                }
+                false
+            }
         }
     }
 
-    fn view(&self, _ctx: &yew::Context<Self>) -> Html {
-        log::debug!("Viewed called");
+    fn view(&self, ctx: &yew::Context<Self>) -> Html {
         if let Some(_) = HelperService::get_jwt_information() {
             let brainfart = self
                 .brainfarts
                 .iter()
                 .map(|brainfart| {
-                    html! {<BrainfartComponent brainfart={brainfart.clone()}/>}
+                    let brain_id = brainfart.id.clone();
+                    let brain_id_two = brainfart.id.clone();
+                    let on_explosion = ctx
+                        .link()
+                        .callback(move |_: MouseEvent| Message::NewExplosion(brain_id.clone()));
+                    let on_implosion = ctx
+                        .link()
+                        .callback(move |_: MouseEvent| Message::NewImplosion(brain_id_two.clone()));
+                    html! {<BrainfartComponent brainfart={brainfart.clone()} on_explosion={on_explosion} on_implosion={on_implosion} />}
                 })
                 .collect::<Html>();
             html! {

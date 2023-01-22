@@ -43,7 +43,7 @@ impl CreateFromRequest for NotifyAboutMindExplosionRequest {
         if let Ok(change_result) = match check_existence_query {
             Ok(result) => {
                 sqlx::query!(
-                    "update mindsblownbyfarts set explosion=true where id=$1",
+                    "update mindsblownbyfarts set explosion=TRUE where id=$1",
                     result.id
                 )
                 .execute(&pool)
@@ -51,7 +51,7 @@ impl CreateFromRequest for NotifyAboutMindExplosionRequest {
             }
             Err(_) => {
                 sqlx::query!(
-                "insert into mindsblownbyfarts(brainfartid, brainid, explosion) VALUES($1,$2,true)",
+                "insert into mindsblownbyfarts(brainfartid, brainid, explosion) VALUES($1,$2,TRUE)",
                 &brainfart_uuid,
                 foreign_id
             )
@@ -81,7 +81,7 @@ impl CreateFromRequest for NotifyAboutMindImplosionRequest {
         if let Ok(change_result) = match check_existence_query {
             Ok(result) => {
                 sqlx::query!(
-                    "update mindsblownbyfarts set explosion=false where id=$1",
+                    "update mindsblownbyfarts set explosion=FALSE where id=$1",
                     result.id
                 )
                 .execute(&pool)
@@ -89,7 +89,7 @@ impl CreateFromRequest for NotifyAboutMindImplosionRequest {
             }
             Err(_) => {
                 sqlx::query!(
-                "insert into mindsblownbyfarts(brainfartid, brainid, explosion) VALUES($1,$2,false)",
+                "insert into mindsblownbyfarts(brainfartid, brainid, explosion) VALUES($1,$2,FALSE)",
                 &brainfart_uuid,
                 foreign_id
             )
