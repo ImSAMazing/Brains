@@ -34,6 +34,7 @@ impl Component for NewBrainfartView {
             }
             Message::CloseModal => {
                 self.show_modal = false;
+                log::debug!("Triggered");
                 true
             }
         }
@@ -43,6 +44,9 @@ impl Component for NewBrainfartView {
         let on_click = ctx
             .link()
             .callback(move |_e: MouseEvent| Message::TriggerModal);
+        let on_overlay_click = ctx
+            .link()
+            .callback(move |_e: MouseEvent| Message::CloseModal);
         let on_close = ctx
             .link()
             .callback(move |_e: MouseEvent| Message::CloseModal);
@@ -107,8 +111,8 @@ impl Component for NewBrainfartView {
                     <button onclick={on_click} class={new_brainfart_button_classes}
                     >{"Feel a fart?"}</button>
                 </div>
-                <div class={gray_overlay_classes}></div>
-                <div tabindex="-1" class={base_modal_classes}>
+                <div class={gray_overlay_classes} ></div>
+                <div tabindex="-1" class={base_modal_classes} onclick={on_overlay_click}>
                     <NewBrainfartComponent on_creation={on_new_brainfart} on_close={on_close}/>
                 </div>
 
