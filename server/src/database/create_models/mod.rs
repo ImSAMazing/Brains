@@ -26,19 +26,19 @@ impl CreateResponse {
 }
 #[async_trait]
 pub trait CreateFromRequest {
-    async fn create(&self, pool: Pool<Postgres>, foreign_id: Uuid) -> Option<CreateResponse>;
+    async fn create(&self, pool: &Pool<Postgres>, foreign_id: &Uuid) -> Option<CreateResponse>;
 }
 
 #[async_trait]
 impl CreateFromRequest for NotifyAboutMindExplosionRequest {
-    async fn create(&self, pool: Pool<Postgres>, foreign_id: Uuid) -> Option<CreateResponse> {
+    async fn create(&self, pool: &Pool<Postgres>, foreign_id: &Uuid) -> Option<CreateResponse> {
         let brainfart_uuid = Uuid::parse_str(&self.brainfart_id).unwrap();
         let check_existence_query = sqlx::query!(
             "SELECT id from mindsblownbyfarts where brainfartid=$1 and brainid=$2 LIMIT 1",
             &brainfart_uuid,
             foreign_id
         )
-        .fetch_one(&pool)
+        .fetch_one(pool)
         .await;
         if let Ok(change_result) = match check_existence_query {
             Ok(result) => {
@@ -46,7 +46,7 @@ impl CreateFromRequest for NotifyAboutMindExplosionRequest {
                     "update mindsblownbyfarts set explosion=TRUE where id=$1",
                     result.id
                 )
-                .execute(&pool)
+                .execute(pool)
                 .await
             }
             Err(_) => {
@@ -55,7 +55,7 @@ impl CreateFromRequest for NotifyAboutMindExplosionRequest {
                 &brainfart_uuid,
                 foreign_id
             )
-                .execute(&pool)
+                .execute(pool)
                 .await
             }
         } {
@@ -69,14 +69,14 @@ impl CreateFromRequest for NotifyAboutMindExplosionRequest {
 
 #[async_trait]
 impl CreateFromRequest for NotifyAboutMindImplosionRequest {
-    async fn create(&self, pool: Pool<Postgres>, foreign_id: Uuid) -> Option<CreateResponse> {
+    async fn create(&self, pool: &Pool<Postgres>, foreign_id: &Uuid) -> Option<CreateResponse> {
         let brainfart_uuid = Uuid::parse_str(&self.brainfart_id).unwrap();
         let check_existence_query = sqlx::query!(
             "SELECT id from mindsblownbyfarts where brainfartid=$1 and brainid=$2 LIMIT 1",
             &brainfart_uuid,
             foreign_id
         )
-        .fetch_one(&pool)
+        .fetch_one(pool)
         .await;
         if let Ok(change_result) = match check_existence_query {
             Ok(result) => {
@@ -84,7 +84,7 @@ impl CreateFromRequest for NotifyAboutMindImplosionRequest {
                     "update mindsblownbyfarts set explosion=FALSE where id=$1",
                     result.id
                 )
-                .execute(&pool)
+                .execute(pool)
                 .await
             }
             Err(_) => {
@@ -93,7 +93,7 @@ impl CreateFromRequest for NotifyAboutMindImplosionRequest {
                 &brainfart_uuid,
                 foreign_id
             )
-                .execute(&pool)
+                .execute(pool)
                 .await
             }
         } {
@@ -107,7 +107,7 @@ impl CreateFromRequest for NotifyAboutMindImplosionRequest {
 
 #[async_trait]
 impl CreateFromRequest for CreateBrainfartRequest {
-    async fn create(&self, pool: Pool<Postgres>, foreign_id: Uuid) -> Option<CreateResponse> {
+    async fn create(&self, pool: &Pool<Postgres>, foreign_id: &Uuid) -> Option<CreateResponse> {
         let create_query = sqlx::query!(
             "INSERT INTO
                 brainfarts
@@ -122,7 +122,7 @@ impl CreateFromRequest for CreateBrainfartRequest {
             &self.get_content(),
             foreign_id
         )
-        .fetch_one(&pool)
+        .fetch_one(pool)
         .await;
         match create_query {
             Ok(result) => Some(CreateResponse {
@@ -137,7 +137,7 @@ impl CreateFromRequest for CreateBrainfartRequest {
 
 #[async_trait]
 impl CreateFromRequest for RegisterBrainRequest {
-    async fn create(&self, pool: Pool<Postgres>, _foreign_id: Uuid) -> Option<CreateResponse> {
+    async fn create(&self, pool: &Pool<Postgres>, _foreign_id: &Uuid) -> Option<CreateResponse> {
         let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
         if let Ok(password_hash) = argon2.hash_password(&self.get_password().as_bytes(), &salt) {
@@ -152,7 +152,7 @@ impl CreateFromRequest for RegisterBrainRequest {
                 &self.get_name(),
                 password_hash.to_string()
             )
-            .fetch_one(&pool)
+            .fetch_one(pool)
             .await;
             match create_query {
                 Ok(result) => Some(CreateResponse {

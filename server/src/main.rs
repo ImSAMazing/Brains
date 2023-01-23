@@ -115,7 +115,7 @@ async fn create_brainfarts(
     let jwt_information = claims.information;
     let mastermind_id = Uuid::parse_str(&jwt_information.id).unwrap();
     match result {
-        Ok(Json(payload)) => match payload.create(pool, mastermind_id).await {
+        Ok(Json(payload)) => match payload.create(&pool, &mastermind_id).await {
             Some(response) => {
                 let brainfart = Brainfart::create(
                     response.uuid.to_string(),
@@ -141,7 +141,7 @@ async fn get_some_brainfarts(
     } else {
         BrainfartFilter::default()
     };
-    if let Some(brainfarts) = get_models::get_brainfarts_using_filter(pool, filter).await {
+    if let Some(brainfarts) = get_models::get_brainfarts_using_filter(&pool, filter).await {
         Ok((StatusCode::OK, Json(brainfarts)))
     } else {
         Err((StatusCode::NOT_FOUND, "Error".to_string()))
@@ -154,16 +154,27 @@ async fn register_mind_explosion(
     result: Result<Json<NotifyAboutMindExplosionRequest>, JsonRejection>,
 ) -> impl IntoResponse {
     match result {
-        Ok(Json(payload)) => match payload
-            .create(pool, Uuid::parse_str(&claims.information.id).unwrap())
-            .await
-        {
-            Some(_) => Ok((StatusCode::CREATED, "")),
-            None => Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Something went wrong registering the mindexplosion".to_string(),
-            )),
-        },
+        Ok(Json(payload)) => {
+            let brainfart_id = Uuid::parse_str(&payload.brainfart_id).unwrap();
+            match payload.create(&pool, &claims.get_id()).await {
+                Some(_) => {
+                    if let Some(updated_brainfart) =
+                        get_models::get_brainfart(&pool, &brainfart_id).await
+                    {
+                        Ok((StatusCode::CREATED, Json(updated_brainfart)))
+                    } else {
+                        Err((
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "Something went wrong registering the mindexplosion".to_string(),
+                        ))
+                    }
+                }
+                None => Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Something went wrong registering the mindexplosion".to_string(),
+                )),
+            }
+        }
         Err(err) => Err(error_responders::post_error_responder(err)),
     }
 }
@@ -174,16 +185,27 @@ async fn register_mind_implosion(
     result: Result<Json<NotifyAboutMindImplosionRequest>, JsonRejection>,
 ) -> impl IntoResponse {
     match result {
-        Ok(Json(payload)) => match payload
-            .create(pool, Uuid::parse_str(&claims.information.id).unwrap())
-            .await
-        {
-            Some(_) => Ok((StatusCode::CREATED, "")),
-            None => Err((
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Something went wrong registering the mindimplosion".to_string(),
-            )),
-        },
+        Ok(Json(payload)) => {
+            let brainfart_id = Uuid::parse_str(&payload.brainfart_id).unwrap();
+            match payload.create(&pool, &claims.get_id()).await {
+                Some(_) => {
+                    if let Some(updated_brainfart) =
+                        get_models::get_brainfart(&pool, &brainfart_id).await
+                    {
+                        Ok((StatusCode::CREATED, Json(updated_brainfart)))
+                    } else {
+                        Err((
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "Something went wrong registering the mindimplosion".to_string(),
+                        ))
+                    }
+                }
+                None => Err((
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Something went wrong registering the mindimplosion".to_string(),
+                )),
+            }
+        }
         Err(err) => Err(error_responders::post_error_responder(err)),
     }
 }
@@ -193,7 +215,7 @@ async fn register_brain(
     result: Result<Json<RegisterBrainRequest>, JsonRejection>,
 ) -> impl IntoResponse {
     match result {
-        Ok(Json(payload)) => match payload.create(pool, Uuid::nil()).await {
+        Ok(Json(payload)) => match payload.create(&pool, &Uuid::nil()).await {
             Some(response) => {
                 let brain = Brain::register(
                     response.uuid.to_string(),
@@ -224,7 +246,7 @@ async fn show_i_own_brain(
 ) -> impl IntoResponse {
     match result {
         Ok(Json(result)) => {
-            if let Some(id) = verify_password(pool, &result).await {
+            if let Some(id) = verify_password(&pool, &result).await {
                 let token = create_jwt(id, (&result.get_name()).to_string());
                 Ok((StatusCode::ACCEPTED, Json(token)))
             } else {

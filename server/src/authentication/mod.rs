@@ -43,6 +43,9 @@ impl JwtDataHolder {
     fn get_issuer() -> String {
         "Brainn".to_string()
     }
+    pub fn get_id(&self) -> Uuid {
+        Uuid::parse_str(&self.information.id).unwrap()
+    }
 }
 
 fn get_hemlighet() -> RS384KeyPair {

@@ -41,18 +41,13 @@ impl BrainfartsView {
             let response_text = resp.text().await.unwrap();
 
             if !resp.ok() {
-                log::error!(
-                    "Received an error while trying to get brainfarts: {:?}",
-                    resp
-                );
                 Message::None
             } else {
                 let json = serde_json::from_str(&response_text);
                 if let Ok(brainfarts) = json {
                     Message::Brainfart(brainfarts)
                 } else {
-                    if let Err(e) = json {
-                        log::debug!("IMproper response: {:?}", e);
+                    if let Err(_) = json {
                         Message::None
                     } else {
                         Message::None
@@ -75,18 +70,13 @@ impl BrainfartsView {
             let response_text = resp.text().await.unwrap();
 
             if !resp.ok() {
-                log::error!(
-                    "Received an error while trying to get brainfarts: {:?}",
-                    resp
-                );
                 Message::None
             } else {
                 let json = serde_json::from_str(&response_text);
                 if let Ok(brainfart) = json {
                     Message::UpdatedBrainfart(brainfart)
                 } else {
-                    if let Err(e) = json {
-                        log::debug!("IMproper response: {:?}", e);
+                    if let Err(_) = json {
                         Message::None
                     } else {
                         Message::None
@@ -110,18 +100,13 @@ impl BrainfartsView {
             let response_text = resp.text().await.unwrap();
 
             if !resp.ok() {
-                log::error!(
-                    "Received an error while trying to get brainfarts: {:?}",
-                    resp
-                );
                 Message::None
             } else {
                 let json = serde_json::from_str(&response_text);
                 if let Ok(brainfart) = json {
                     Message::UpdatedBrainfart(brainfart)
                 } else {
-                    if let Err(e) = json {
-                        log::debug!("IMproper response: {:?}", e);
+                    if let Err(_) = json {
                         Message::None
                     } else {
                         Message::None
@@ -163,8 +148,10 @@ impl Component for BrainfartsView {
                 {
                     index.blew_minds = changed_fart.blew_minds;
                     index.imploded_minds = changed_fart.imploded_minds;
+                    true
+                } else {
+                    false
                 }
-                false
             }
         }
     }

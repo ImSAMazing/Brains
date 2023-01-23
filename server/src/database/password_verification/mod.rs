@@ -6,14 +6,14 @@ use shared::ProveOwnsBrainRequest;
 use sqlx::{types::Uuid, Pool, Postgres};
 
 pub async fn verify_password(
-    pool: Pool<Postgres>,
+    pool: &Pool<Postgres>,
     förfrågon: &ProveOwnsBrainRequest,
 ) -> Option<Uuid> {
     let brain_query = sqlx::query!(
         "select id, password from brains where brainname=$1 LIMIT 1",
         &förfrågon.get_name(),
     )
-    .fetch_one(&pool)
+    .fetch_one(pool)
     .await;
     if let Ok(result) = brain_query {
         let argon2 = Argon2::default();
