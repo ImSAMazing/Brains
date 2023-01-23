@@ -12,6 +12,9 @@ pub struct BrainInformation {
 }
 
 impl BrainInformation {
+    pub fn get_id(&self) -> &Uuid {
+        &self.id
+    }
     pub fn create_from_brain(brain: Brain) -> BrainInformation {
         BrainInformation {
             id: brain.id,

@@ -2,6 +2,8 @@ use shared::BrainfartInformation;
 use web_sys::MouseEvent;
 use yew::{classes, html, Callback, Component, Html, Properties};
 
+use crate::HelperService;
+
 #[derive(Properties, Clone, PartialEq)]
 pub struct BrainfartProps {
     pub brainfart: BrainfartInformation,
@@ -31,6 +33,27 @@ impl Component for BrainfartComponent {
         let dag = brainfart.birthdate.format("%Y/%m/%d %H:%M").to_string();
         let on_explosion = &ctx.props().on_explosion;
         let on_implosion = &ctx.props().on_implosion;
+
+        let has_exploded = if let Some(_) = &brainfart
+            .blew_minds
+            .iter()
+            .find(|item| item.get_id() == &HelperService::get_jwt_information().unwrap().id)
+        {
+            true
+        } else {
+            false
+        };
+        let has_imploded = !has_exploded
+            && if let Some(_) = &brainfart
+                .imploded_minds
+                .iter()
+                .find(|item| item.get_id() == &HelperService::get_jwt_information().unwrap().id)
+            {
+                true
+            } else {
+                false
+            };
+
         html! {
             <div key={brainfart.id.to_string()} class={classes!("block", "xl:w-2/5", "md:w-2/3", "sm:w-4/5", "xs:w-full", "border", "border-gray-300", "rounded-lg", "shadow-md", "bg-gray-50", "mt-2")}>
                 <div class={classes!("p-2", "border-b", "rounded-t", "dark:border-gray-600", "items-center", "justify-center")}>
@@ -45,18 +68,36 @@ impl Component for BrainfartComponent {
                 </div>
                 <div class={classes!("flex","justify-between", "border-t", "border-gray-200", "rounded-b", "space-x-2")}>
                     <p class="inline-flex items-center px-3 py-2 text-sm font-medium text-center">
-                        <div onclick={on_explosion}>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                <path d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                            {&brainfart.blew_minds.len()}
-                        </div>
-                        <div onclick={on_implosion}>
-                            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M11.412 15.655L9.75 21.75l3.745-4.012M9.257 13.5H3.75l2.659-2.849m2.048-2.194L14.25 2.25 12 10.5h8.25l-4.707 5.043M8.457 8.457L3 3m5.457 5.457l7.086 7.086m0 0L21 21" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                            {&brainfart.imploded_minds.len()}
-                        </div>
+                        if has_exploded{
+                            <div class="inline-flex items-center text-center text-yellow-500">
+                                <svg class="w-4 h-4 stroke-yellow-500" fill="none" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                                {&brainfart.blew_minds.len()}
+                            </div>
+                        }else{
+                            <div onclick={on_explosion} class="inline-flex items-center text-center">
+                                <svg class="w-4 h-4" stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                                {&brainfart.blew_minds.len()}
+                            </div>
+                        }
+                        if has_imploded{
+                            <div class="inline-flex items-center text-center text-red-500">
+                                <svg class="w-4 h-4 ml-2 stroke-red-500" fill="none" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M11.412 15.655L9.75 21.75l3.745-4.012M9.257 13.5H3.75l2.659-2.849m2.048-2.194L14.25 2.25 12 10.5h8.25l-4.707 5.043M8.457 8.457L3 3m5.457 5.457l7.086 7.086m0 0L21 21" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                                {&brainfart.imploded_minds.len()}
+                            </div>
+                        }else{
+                            <div onclick={on_implosion} class="inline-flex items-center text-center">
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M11.412 15.655L9.75 21.75l3.745-4.012M9.257 13.5H3.75l2.659-2.849m2.048-2.194L14.25 2.25 12 10.5h8.25l-4.707 5.043M8.457 8.457L3 3m5.457 5.457l7.086 7.086m0 0L21 21" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                                {&brainfart.imploded_minds.len()}
+                            </div>
+                        }
                     </p>
                     <p class="inline-flex items-center px-3 py-2 text-sm font-medium text-center">
                         <svg class="w-4 h-4 mr-1" viewBox="0 0 20 20">
