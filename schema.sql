@@ -22,4 +22,11 @@ create table mindsblownbyfarts(
 	CONSTRAINT fk_brain FOREIGN KEY(brainid) REFERENCES brains(id),
 	CONSTRAINT fk_brainfart FOREIGN KEY(brainfartid) REFERENCES brainfarts(id)
 );
-	
+create table hallucinatedfarts(
+	id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+	brainfartid UUID,
+	brainid UUID,
+	hallucinationdate TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	CONSTRAINT fk_brain FOREIGN KEY(brainid) REFERENCES brains(id),
+	CONSTRAINT fk_brainfart FOREIGN KEY(brainfartid) REFERENCES brainfarts(id)
+);
