@@ -1,6 +1,36 @@
 use shared::{BrainInformation, BrainfartFilter, BrainfartInformation};
 use sqlx::{types::Uuid, Pool, Postgres};
 
+async fn set_brainfart_as_viewed(
+    pool: &Pool<Postgres>,
+    brainfart_id: &Uuid,
+    brain_id: &Uuid,
+) -> bool {
+    let query = sqlx::query!(
+        "
+        select id from hallucinatedfarts where brainid=$1 and brainfartid=$2 LIMIT 1",
+        brain_id,
+        brainfart_id
+    )
+    .fetch_one(pool)
+    .await;
+    if let Err(_) = query {
+        let query = sqlx::query!(
+            "insert into hallucinatedfarts(brainid,brainfartid) VALUES($1,$2)",
+            brain_id,
+            brainfart_id
+        )
+        .execute(pool)
+        .await;
+        if let Ok(_) = query {
+            true
+        } else {
+            false
+        }
+    } else {
+        false
+    }
+}
 async fn get_brain_information(pool: &Pool<Postgres>, brain_id: &Uuid) -> Option<BrainInformation> {
     let query = sqlx::query!(
         "select brainname, birthdate from brains where id=$1 LIMIT 1",

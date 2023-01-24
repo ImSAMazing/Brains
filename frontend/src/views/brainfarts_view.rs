@@ -2,8 +2,8 @@ use gloo_net::http::Request;
 use shared::{
     BrainfartInformation, NotifyAboutMindExplosionRequest, NotifyAboutMindImplosionRequest, Uuid,
 };
-use web_sys::MouseEvent;
-use yew::{classes, html, Component, Html, Properties};
+use web_sys::{HtmlDivElement, MouseEvent, WheelEvent};
+use yew::{classes, html, html::onscroll::Event, Component, Html, NodeRef, Properties};
 
 use crate::{
     components::{
@@ -28,6 +28,7 @@ pub enum Message {
 
 pub struct BrainfartsView {
     brainfarts: Vec<BrainfartInformation>,
+    brainfarts_div: NodeRef,
 }
 
 impl BrainfartsView {
@@ -122,7 +123,10 @@ impl Component for BrainfartsView {
     type Properties = BrainfartsProps;
     fn create(ctx: &yew::Context<Self>) -> Self {
         Self::get_brainfarts(ctx);
-        Self { brainfarts: vec![] }
+        Self {
+            brainfarts: vec![],
+            brainfarts_div: NodeRef::default(),
+        }
     }
 
     fn update(&mut self, ctx: &yew::Context<Self>, msg: Self::Message) -> bool {
@@ -157,6 +161,18 @@ impl Component for BrainfartsView {
     }
 
     fn view(&self, ctx: &yew::Context<Self>) -> Html {
+        let brainfart_div_ref = self.brainfarts_div.clone();
+        let handle_scroll = ctx.link().callback(move |_: Event| {
+            let div = brainfart_div_ref.cast::<HtmlDivElement>().unwrap();
+            log::debug!("{}, {}", div.offset_height(), div.scroll_top());
+            Message::None
+        });
+        let brainfart_div_ref = self.brainfarts_div.clone();
+        let handle_wheel = ctx.link().callback(move |_: WheelEvent| {
+            let w = web_sys::window().unwrap();
+            log::debug!("{}, {}", w.page_y_offset().unwrap(), w.scroll_y().unwrap());
+            Message::None
+        });
         if let Some(_) = HelperService::get_jwt_information() {
             let brainfart = self
                 .brainfarts
@@ -176,7 +192,7 @@ impl Component for BrainfartsView {
             html! {
                 <div>
                 if self.brainfarts.len() > 0{
-                    <div class={classes!("flex","items-center","justify-between","flex-col")}>
+                    <div ref={self.brainfarts_div.clone()} class={classes!("flex","items-center","justify-between","flex-col")} onscroll={handle_scroll.clone()} onwheel={handle_wheel.clone()}>
                     {brainfart}
                     </div>
                 }else{
